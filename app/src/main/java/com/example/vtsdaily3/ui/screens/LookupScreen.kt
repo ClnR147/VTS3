@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.example.vtsdaily3.ui.components.VtsCard
+import com.example.vtsdaily3.ui.components.VtsScreenHeader
+import com.example.vtsdaily3.ui.theme.VtsSpacing
 
 @Composable
 fun LookupScreen() {
@@ -277,39 +279,19 @@ private fun LookupDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)
+            .padding(VtsSpacing.md)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(bottom = VtsSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
         ) {
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = summary.passenger,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        if (!summary.phone.isNullOrBlank()) {
-                            Text(
-                                text = summary.phone,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = VtsGreen,
-                                textAlign = TextAlign.End
-                            )
-                        }
-                    }
-                }
+                VtsScreenHeader(
+                    title = summary.passenger,
+                    subtitle = summary.phone,
+                    showDivider = false
+                )
             }
 
             items(tripsByDate) { (date, tripsForDate) ->
@@ -320,25 +302,30 @@ private fun LookupDetailScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(96.dp))
+                Spacer(modifier = Modifier.height(VtsSpacing.fabClearance))
             }
         }
 
-        IconButton(
-            onClick = onBack,
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .navigationBarsPadding()
-                .padding(start = 16.dp, bottom = 16.dp)
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(VtsGreen)
+                .padding(start = VtsSpacing.lg, bottom = VtsSpacing.lg),
+            shape = CircleShape,
+            color = VtsGreen,
+            tonalElevation = 4.dp,
+            shadowElevation = 4.dp
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White
-            )
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
+            }
         }
     }
 }
@@ -385,21 +372,22 @@ private fun LookupLabelValueRow(
     value: String
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.width(80.dp)
+            modifier = Modifier.width(72.dp)
         )
 
         Text(
-            text = value.ifBlank { "-" },
+            text = value,
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.weight(1f)
         )
-        }
+    }
 }
 
 @Composable

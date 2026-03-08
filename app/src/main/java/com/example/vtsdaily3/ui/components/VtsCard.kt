@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
+import com.example.vtsdaily3.ui.theme.VtsSpacing
 
 @Composable
 fun VtsCard(
@@ -40,7 +41,10 @@ fun VtsCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = VtsSpacing.md,
+                    vertical = VtsSpacing.md
+                ),
             content = content
         )
     }

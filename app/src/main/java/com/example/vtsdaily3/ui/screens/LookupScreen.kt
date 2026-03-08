@@ -36,7 +36,10 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsCard
+import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
+import com.example.vtsdaily3.ui.components.VtsSearchField
+import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 
 @Composable
@@ -159,15 +162,15 @@ fun LookupScreen() {
         },
 
         searchBar = {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search passengers") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                singleLine = true
-            )
+            Box(
+                modifier = Modifier.padding(horizontal = VtsSpacing.md)
+            ) {
+                VtsSearchField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = "Search passengers"
+                )
+            }
         },
 
         sortBar = {
@@ -239,26 +242,13 @@ private fun LookupSummaryCard(
     onClick: () -> Unit
 ) {
     VtsCard(
-        onClick = onClick
+        onClick = onClick,
+        density = VtsCardDensity.Compact
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = summary.passenger,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
-            )
-
-            Text(
-                text = summary.tripCount.toString(),
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.width(72.dp)
-            )
-        }
+        VtsSummaryRow(
+            title = summary.passenger,
+            trailingText = summary.tripCount.toString()
+        )
     }
 }
 @Composable
@@ -330,15 +320,15 @@ private fun LookupTripDateCard(
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(VtsSpacing.sm))
 
         trips.forEachIndexed { index, trip ->
             if (index > 0) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(VtsSpacing.sm))
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
             ) {
                 LookupLabelValueRow(
                     label = "Pickup:",

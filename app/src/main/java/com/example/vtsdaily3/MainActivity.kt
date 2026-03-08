@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.vtsdaily3.ui.theme.VTSDaily3Theme
 import androidx.activity.compose.setContent
+import com.example.vtsdaily3.ui.screens.LookupScreen
 import com.example.vtsdaily3.ui.screens.TemplateTestScreen
 
 class MainActivity : ComponentActivity() {
@@ -21,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TemplateTestScreen()
+            LookupScreen()
         }
     }
 }

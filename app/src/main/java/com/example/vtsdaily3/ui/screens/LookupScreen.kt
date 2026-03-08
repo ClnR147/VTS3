@@ -1,5 +1,8 @@
 package com.example.vtsdaily3.ui.screens
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,13 +13,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.lookup.LookupRow
+import com.example.vtsdaily3.lookup.importLookupCsv
 import com.example.vtsdaily3.ui.template.HeaderDetailHost
 import com.example.vtsdaily3.ui.template.VtsScreenTemplate
+import com.example.vtsdaily3.ui.theme.VtsGreen
+import java.time.LocalDate
 import java.util.Locale
+import android.content.Context
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.core.content.edit
+import androidx.core.net.toUri
 
 @Composable
 fun LookupScreen() {
@@ -28,6 +45,47 @@ fun LookupScreen() {
 
     val summaries = remember(importedRows) {
         buildPassengerSummaries(importedRows)
+    }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        val savedUri = loadLookupUri(context) ?: return@LaunchedEffect
+
+        runCatching {
+            context.contentResolver.openInputStream(savedUri)?.use { input ->
+                importedRows = importLookupCsv(input)
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) {
+            Log.d("LookupImport", "Import cancelled")
+            return@rememberLauncherForActivityResult
+        }
+
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // Fine if persistable permission is not available
+        }
+
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val rows = importLookupCsv(input)
+                importedRows = rows
+                selectedPassengerKey = null
+                searchQuery = ""
+                saveLookupUri(context, uri)
+            }
+        } catch (e: Exception) {
+            Log.e("LookupImport", "Import failed", e)
+        }
     }
 
     val filteredSummaries = remember(summaries, searchQuery, sortMode) {
@@ -61,7 +119,7 @@ fun LookupScreen() {
     }
 
     VtsScreenTemplate(
-        title = if (selectedSummary == null) "Passenger Lookup" else selectedSummary.passenger,
+        title = "Passenger Lookup",
         showControls = selectedSummary == null,
 
         dropdown = {
@@ -81,7 +139,7 @@ fun LookupScreen() {
                         text = { Text("Import") },
                         onClick = {
                             menuExpanded = false
-                            // TODO: wire CSV import here
+                            importLauncher.launch(arrayOf("text/*", "*/*"))
                         }
                     )
 
@@ -209,72 +267,118 @@ private fun LookupDetailScreen(
     summary: LookupPassengerSummary,
     onBack: () -> Unit
 ) {
-    Column(
+    val tripsByDate = remember(summary.trips) {
+        summary.trips
+            .groupBy { normalizedDisplayDate(it.driveDate) }
+            .toList()
+            .sortedBy { (_, tripsForDate) ->
+                tripsForDate.minOfOrNull {
+                    parseLookupDate(it.driveDate) ?: LocalDate.MAX
+                } ?: LocalDate.MAX
+            }
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(12.dp)
     ) {
-        Text(
-            text = summary.passenger,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        if (!summary.phone.isNullOrBlank()) {
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = summary.phone,
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Button(onClick = onBack) {
-            Text("Back")
-        }
-
-        Spacer(Modifier.height(12.dp))
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(
-                items = summary.trips,
-                key = { tripRowKey(it) }
-            ) { trip ->
-                LookupTripCard(trip = trip)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = summary.passenger,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    if (!summary.phone.isNullOrBlank()) {
+                        Text(
+                            text = summary.phone,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = VtsGreen,
+                            textAlign = TextAlign.End
+                        )
+                    }
+                }
             }
+
+            items(tripsByDate) { (date, tripsForDate) ->
+                LookupTripDateCard(
+                    date = date,
+                    trips = tripsForDate
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(84.dp))
+            }
+        }
+
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .navigationBarsPadding()
+                .padding(start = 20.dp, bottom = 20.dp)
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(VtsGreen)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
         }
     }
 }
-
 @Composable
-private fun LookupTripCard(trip: LookupRow) {
+private fun LookupTripDateCard(
+    date: String,
+    trips: List<LookupRow>
+) {
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
-            LookupLabelValueRow(
-                label = "Date:",
-                value = trip.driveDate.orEmpty()
+            Text(
+                text = date,
+                style = MaterialTheme.typography.titleMedium,
+                color = VtsGreen,
+                fontWeight = FontWeight.Bold
             )
 
-            LookupLabelValueRow(
-                label = "Pickup:",
-                value = trip.pAddress.orEmpty()
-            )
+            Spacer(Modifier.height(4.dp))
 
-            LookupLabelValueRow(
-                label = "Drop-off:",
-                value = trip.dAddress.orEmpty()
-            )
+            trips.forEachIndexed { index, trip ->
+                if (index > 0) {
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                Column {
+                    LookupLabelValueRow(
+                        label = "Pickup:",
+                        value = trip.pAddress.orEmpty()
+                    )
+                    LookupLabelValueRow(
+                        label = "Drop-off:",
+                        value = trip.dAddress.orEmpty()
+                    )
+                }
+            }
         }
     }
 }
@@ -386,48 +490,89 @@ private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassenger
                 tripCount = trips.size,
                 trips = trips.sortedWith(
                     compareBy<LookupRow>(
-                        { sortableDateValue(it.driveDate) },
-                        { it.pAddress.orEmpty().lowercase(Locale.getDefault()) },
-                        { it.dAddress.orEmpty().lowercase(Locale.getDefault()) }
+                        { parseLookupDate(it.driveDate) ?: LocalDate.MAX },
+                        { it.pAddress.orEmpty().trim().lowercase(Locale.getDefault()) },
+                        { it.dAddress.orEmpty().trim().lowercase(Locale.getDefault()) },
+                        { it.tripType.orEmpty().trim().lowercase(Locale.getDefault()) }
                     )
                 )
             )
         }
 }
 
+private fun normalizedDisplayDate(raw: String?): String {
+    val parsed = parseLookupDate(raw)
+    return if (parsed != null) {
+        parsed.toString()   // yyyy-MM-dd
+    } else {
+        raw.orEmpty().trim().ifBlank { "Unknown date" }
+    }
+}
+
+
+private fun parseLookupDate(raw: String?): LocalDate? {
+    val s = raw?.trim().orEmpty()
+    if (s.isBlank()) return null
+
+    val r1 = Regex("""(20\d{2})[./-](\d{1,2})[./-](\d{1,2})""")   // yyyy-mm-dd
+    val r2 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](\d{2})""")     // mm-dd-yy
+    val r3 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](20\d{2})""")   // mm-dd-yyyy
+
+    r1.matchEntire(s)?.let {
+        return safeDate(
+            it.groupValues[1].toInt(),
+            it.groupValues[2].toInt(),
+            it.groupValues[3].toInt()
+        )
+    }
+
+    r3.matchEntire(s)?.let {
+        return safeDate(
+            it.groupValues[3].toInt(),
+            it.groupValues[1].toInt(),
+            it.groupValues[2].toInt()
+        )
+    }
+
+    r2.matchEntire(s)?.let {
+        val yy = it.groupValues[3].toInt()
+        return safeDate(
+            2000 + yy,
+            it.groupValues[1].toInt(),
+            it.groupValues[2].toInt()
+        )
+    }
+
+    return null
+}
+
+private fun safeDate(year: Int, month: Int, day: Int): LocalDate? {
+    return try {
+        LocalDate.of(year, month, day)
+    } catch (_: Exception) {
+        null
+    }
+}
 private fun normalizePassengerKey(name: String): String {
     return name.trim().lowercase(Locale.getDefault())
 }
 
-private fun sortableDateValue(raw: String?): String {
-    val value = raw.orEmpty().trim()
-    if (value.isBlank()) return "9999-99-99"
+private const val LOOKUP_PREFS = "lookup_prefs"
+private const val KEY_LOOKUP_URI = "lookup_uri"
 
-    val parts = value.split("/", "-", ".")
-    return if (parts.size == 3) {
-        val a = parts[0].padStart(2, '0')
-        val b = parts[1].padStart(2, '0')
-        val c = parts[2]
-
-        when {
-            c.length == 4 -> "$c-$a-$b"
-            c.length == 2 -> "20$c-$a-$b"
-            else -> value
+private fun saveLookupUri(context: Context, uri: Uri) {
+    context.getSharedPreferences(LOOKUP_PREFS, Context.MODE_PRIVATE)
+        .edit {
+            putString(KEY_LOOKUP_URI, uri.toString())
         }
-    } else {
-        value
-    }
 }
 
-private fun tripRowKey(row: LookupRow): String {
-    return listOf(
-        row.driveDate.orEmpty(),
-        row.passenger.orEmpty(),
-        row.pAddress.orEmpty(),
-        row.dAddress.orEmpty(),
-        row.tripType.orEmpty(),
-        row.puTimeAppt.orEmpty(),
-        row.doTimeAppt.orEmpty(),
-        row.rtTime.orEmpty()
-    ).joinToString("|")
+private fun loadLookupUri(context: Context): Uri? {
+    val value = context.getSharedPreferences(LOOKUP_PREFS, Context.MODE_PRIVATE)
+        .getString(KEY_LOOKUP_URI, null)
+        ?: return null
+
+    return runCatching { value.toUri() }.getOrNull()
 }
+
+

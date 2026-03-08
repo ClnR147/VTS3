@@ -84,7 +84,7 @@ fun VtsThickDivider() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .height(8.dp)
+            .height(10.dp)
             .clip(RoundedCornerShape(2.dp))
             .background(VtsGreen)
     )

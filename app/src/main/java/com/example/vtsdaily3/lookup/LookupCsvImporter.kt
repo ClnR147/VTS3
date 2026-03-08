@@ -151,7 +151,6 @@ private fun indexOfHeader(header: List<String>, aliases: List<String>): Int {
     }
     return -1
 }
-
 private fun normalizeHeader(value: String): String {
     return value
         .trim()

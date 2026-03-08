@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.example.vtsdaily3.ui.components.VtsCard
 
 @Composable
 fun LookupScreen() {
@@ -234,15 +235,11 @@ private fun LookupSummaryCard(
     summary: LookupPassengerSummary,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+    VtsCard(
+        onClick = onClick
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -261,7 +258,6 @@ private fun LookupSummaryCard(
         }
     }
 }
-
 @Composable
 private fun LookupDetailScreen(
     summary: LookupPassengerSummary,
@@ -285,28 +281,33 @@ private fun LookupDetailScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = summary.passenger,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    if (!summary.phone.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = summary.phone,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = VtsGreen,
-                            textAlign = TextAlign.End
+                            text = summary.passenger,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        if (!summary.phone.isNullOrBlank()) {
+                            Text(
+                                text = summary.phone,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = VtsGreen,
+                                textAlign = TextAlign.End
+                            )
+                        }
                     }
                 }
             }
@@ -319,7 +320,7 @@ private fun LookupDetailScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(84.dp))
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
 
@@ -328,7 +329,7 @@ private fun LookupDetailScreen(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .navigationBarsPadding()
-                .padding(start = 20.dp, bottom = 20.dp)
+                .padding(start = 16.dp, bottom = 16.dp)
                 .size(64.dp)
                 .clip(CircleShape)
                 .background(VtsGreen)
@@ -341,43 +342,38 @@ private fun LookupDetailScreen(
         }
     }
 }
+
 @Composable
 private fun LookupTripDateCard(
     date: String,
     trips: List<LookupRow>
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-        ) {
-            Text(
-                text = date,
-                style = MaterialTheme.typography.titleMedium,
-                color = VtsGreen,
-                fontWeight = FontWeight.Bold
-            )
+    VtsCard {
+        Text(
+            text = date,
+            style = MaterialTheme.typography.titleMedium,
+            color = VtsGreen,
+            fontWeight = FontWeight.Bold
+        )
 
-            Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(8.dp))
 
-            trips.forEachIndexed { index, trip ->
-                if (index > 0) {
-                    Spacer(Modifier.height(4.dp))
-                }
+        trips.forEachIndexed { index, trip ->
+            if (index > 0) {
+                Spacer(Modifier.height(8.dp))
+            }
 
-                Column {
-                    LookupLabelValueRow(
-                        label = "Pickup:",
-                        value = trip.pAddress.orEmpty()
-                    )
-                    LookupLabelValueRow(
-                        label = "Drop-off:",
-                        value = trip.dAddress.orEmpty()
-                    )
-                }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                LookupLabelValueRow(
+                    label = "Pickup:",
+                    value = trip.pAddress.orEmpty()
+                )
+                LookupLabelValueRow(
+                    label = "Drop-off:",
+                    value = trip.dAddress.orEmpty()
+                )
             }
         }
     }
@@ -403,7 +399,7 @@ private fun LookupLabelValueRow(
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.weight(1f)
         )
-    }
+        }
 }
 
 @Composable

@@ -95,7 +95,8 @@ fun VtsThinDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 12.dp)
             .height(1.dp)
-            .background(MaterialTheme.colorScheme.primary)
+            .background(VtsGreen)
     )
 }

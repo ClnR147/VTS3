@@ -6,29 +6,45 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
-val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+val AppTypography = Typography(
+    displayLarge = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontSize = 36.sp
+    ),
+    headlineSmall = TextStyle( // e.g. App header
+        fontWeight = FontWeight.Medium,
+        fontSize = 22.sp
+    ),
+    titleLarge = TextStyle( // e.g. Trip Status
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp
+    ),
+    titleMedium = TextStyle( // Section subheaders
+        fontWeight = FontWeight.Medium,
+        fontSize = 18.sp
+    ),
+    titleSmall = TextStyle( // Labels like 'From:', 'To:'
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp
+    ),
+    bodyLarge = TextStyle( // Main content text
         fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        fontSize = 16.sp
+    ),
+    bodyMedium = TextStyle( // Secondary info
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp
+    ),
+    bodySmall = TextStyle( // Less important
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp
+    ),
+    labelLarge = TextStyle( // Table headers like 'Time', 'Name'
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontSize = 11.sp
     )
-    */
 )

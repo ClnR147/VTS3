@@ -11,10 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.vtsdaily3.ui.theme.VTSDaily3Theme
+// import com.example.vtsdaily3.ui.theme.VTSDaily3Theme
 import androidx.activity.compose.setContent
 import com.example.vtsdaily3.ui.screens.LookupScreen
 import com.example.vtsdaily3.ui.screens.TemplateTestScreen
+import com.example.vtsdaily3.ui.theme.Vts3DailyTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -22,7 +23,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            LookupScreen()
+            Vts3DailyTheme() {
+                LookupScreen()
+            }
         }
     }
 }

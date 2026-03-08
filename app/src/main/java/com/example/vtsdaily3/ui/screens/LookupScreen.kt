@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
 import com.example.vtsdaily3.ui.theme.VtsSpacing
@@ -306,27 +307,13 @@ private fun LookupDetailScreen(
             }
         }
 
-        Surface(
+        VtsBackButton(
+            onClick = onBack,
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .navigationBarsPadding()
-                .padding(start = VtsSpacing.lg, bottom = VtsSpacing.lg),
-            shape = CircleShape,
-            color = VtsGreen,
-            tonalElevation = 4.dp,
-            shadowElevation = 4.dp
-        ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(64.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
-        }
+                .padding(start = VtsSpacing.lg, bottom = VtsSpacing.lg)
+        )
     }
 }
 

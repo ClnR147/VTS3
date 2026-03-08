@@ -13,10 +13,16 @@ import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsShapes
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 
+enum class VtsCardDensity {
+    Default,
+    Compact
+}
+
 @Composable
 fun VtsCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    density: VtsCardDensity = VtsCardDensity.Default,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val cardModifier = if (onClick != null) {
@@ -25,6 +31,11 @@ fun VtsCard(
             .clickable { onClick() }
     } else {
         modifier.fillMaxWidth()
+    }
+
+    val verticalPadding = when (density) {
+        VtsCardDensity.Default -> VtsSpacing.md
+        VtsCardDensity.Compact -> VtsSpacing.sm
     }
 
     Card(
@@ -42,7 +53,7 @@ fun VtsCard(
                 .fillMaxWidth()
                 .padding(
                     horizontal = VtsSpacing.md,
-                    vertical = VtsSpacing.md
+                    vertical = verticalPadding
                 ),
             content = content
         )

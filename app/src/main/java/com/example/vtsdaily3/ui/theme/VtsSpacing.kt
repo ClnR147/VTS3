@@ -11,6 +11,7 @@ object VtsSpacing {
 
     val fabClearance = 96.dp
     val backButtonSize = 64.dp
+    val summaryTrailingWidth = 72.dp
 
     val cardElevation = 2.dp
     val fabElevation = 4.dp

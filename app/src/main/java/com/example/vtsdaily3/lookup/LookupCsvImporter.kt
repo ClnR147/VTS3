@@ -130,6 +130,12 @@ fun importLookupCsv(
                     raw = raw
                 )
             }
+            Log.d(TAG_IMPORT, "Imported rows: ${out.size}")
+
+            out.take(5).forEach {
+                Log.d(TAG_IMPORT, "Row: $it")
+            }
+
 
             return out
         }

@@ -41,6 +41,7 @@ import com.example.vtsdaily3.ui.components.VtsScreenHeader
 import com.example.vtsdaily3.ui.components.VtsSearchField
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
+import com.example.vtsdaily3.util.VtsDateFormat
 
 @Composable
 fun LookupScreen() {
@@ -317,8 +318,10 @@ private fun LookupTripDateCard(
             text = date,
             style = MaterialTheme.typography.titleMedium,
             color = VtsGreen,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
+
+        Spacer(Modifier.height(6.dp))
 
         Spacer(Modifier.height(VtsSpacing.sm))
 
@@ -356,7 +359,9 @@ private fun LookupLabelValueRow(
             text = label,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.width(72.dp)
+            modifier = Modifier
+                .width(72.dp)
+                .padding(end = 4.dp)
         )
 
         Text(
@@ -489,10 +494,11 @@ private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassenger
         }
 }
 
+
 private fun normalizedDisplayDate(raw: String?): String {
     val parsed = parseLookupDate(raw)
     return if (parsed != null) {
-        parsed.toString()   // yyyy-MM-dd
+        VtsDateFormat.mmddyyyy(parsed)
     } else {
         raw.orEmpty().trim().ifBlank { "Unknown date" }
     }

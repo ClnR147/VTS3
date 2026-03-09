@@ -11,8 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import com.example.vtsdaily3.ui.theme.VtsDivider
 import com.example.vtsdaily3.ui.theme.VtsGreen
+import com.example.vtsdaily3.ui.theme.VtsSpacing
 
 @Composable
 fun VtsScreenTemplate(
@@ -22,23 +23,19 @@ fun VtsScreenTemplate(
     searchBar: (@Composable () -> Unit)? = null,
     sortBar: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
-
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 36.dp)
+            .padding(top = VtsSpacing.xl)
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = VtsSpacing.md, vertical = VtsSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // left spacer balances the menu width
-            Box(modifier = Modifier.size(48.dp))
+            Box(modifier = Modifier.size(VtsSpacing.headerButtonSize))
 
             Text(
                 text = title,
@@ -50,22 +47,36 @@ fun VtsScreenTemplate(
 
             if (showControls) {
                 Box(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(VtsSpacing.headerButtonSize),
                     contentAlignment = Alignment.Center
                 ) {
                     dropdown?.invoke()
                 }
             } else {
-                Box(modifier = Modifier.size(48.dp))
+                Box(modifier = Modifier.size(VtsSpacing.headerButtonSize))
             }
         }
 
-        VtsThickDivider()
+        Box(
+            modifier = Modifier.padding(horizontal = VtsSpacing.md)
+        ) {
+            VtsThickDivider()
+        }
+
 
         if (showControls) {
-            searchBar?.invoke()
-            sortBar?.invoke()
-            VtsThinDivider()
+
+            Spacer(Modifier.height(VtsSpacing.xs))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
+            ) {
+                searchBar?.invoke()
+                sortBar?.invoke()
+                VtsThinDivider()
+            }
+
+            Spacer(Modifier.height(VtsSpacing.xs))
         }
 
         Box(
@@ -83,9 +94,8 @@ fun VtsThickDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .height(10.dp)
-            .clip(RoundedCornerShape(2.dp))
+            .height(VtsDivider.thickHeight)
+            .clip(RoundedCornerShape(VtsDivider.thickCornerRadius))
             .background(VtsGreen)
     )
 }
@@ -95,8 +105,8 @@ fun VtsThinDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .height(1.dp)
+            .padding(horizontal = VtsSpacing.md)
+            .height(VtsDivider.thinHeight)
             .background(VtsGreen)
     )
 }

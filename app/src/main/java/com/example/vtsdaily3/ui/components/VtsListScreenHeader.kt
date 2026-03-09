@@ -2,7 +2,9 @@ package com.example.vtsdaily3.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.vtsdaily3.ui.theme.VtsSpacing
@@ -27,6 +29,7 @@ fun VtsListScreenHeader(
         )
 
         if (searchBar != null) {
+            Spacer(Modifier.height(VtsSpacing.sm))
             searchBar()
         }
 

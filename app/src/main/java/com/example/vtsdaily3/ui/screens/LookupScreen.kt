@@ -392,24 +392,52 @@ private fun LookupSortBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = VtsSpacing.md),
+        horizontalArrangement = Arrangement.spacedBy(VtsSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(onClick = onSortName) {
-                Text(if (selected == LookupSortMode.NAME) "Name ✓" else "Name")
+        val selectedColors = ButtonDefaults.buttonColors(
+            containerColor = VtsGreen,
+            contentColor = Color.White
+        )
+
+        val unselectedColors = ButtonDefaults.outlinedButtonColors(
+            contentColor = VtsGreen
+        )
+
+        if (selected == LookupSortMode.NAME) {
+            Button(
+                onClick = onSortName,
+                modifier = Modifier.weight(1f),
+                colors = selectedColors
+            ) {
+                Text("Name")
+            }
+        } else {
+            OutlinedButton(
+                onClick = onSortName,
+                modifier = Modifier.weight(1f),
+                colors = unselectedColors
+            ) {
+                Text("Name")
             }
         }
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(onClick = onSortTrips) {
-                Text(if (selected == LookupSortMode.TRIPS) "Trips ✓" else "Trips")
+        if (selected == LookupSortMode.TRIPS) {
+            Button(
+                onClick = onSortTrips,
+                modifier = Modifier.weight(1f),
+                colors = selectedColors
+            ) {
+                Text("Trips")
+            }
+        } else {
+            OutlinedButton(
+                onClick = onSortTrips,
+                modifier = Modifier.weight(1f),
+                colors = unselectedColors
+            ) {
+                Text("Trips")
             }
         }
     }

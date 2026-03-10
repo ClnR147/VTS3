@@ -1,4 +1,4 @@
-package com.example.vtsdaily3.lookup
+package com.example.vtsdaily3.feature_lookup.data
 
 import android.content.Context
 import com.google.gson.Gson

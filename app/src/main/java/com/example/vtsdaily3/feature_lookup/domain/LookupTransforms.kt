@@ -1,4 +1,6 @@
-package com.example.vtsdaily3.lookup
+package com.example.vtsdaily3.feature_lookup.domain
+
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
 
 data class LookupSummary(
     val passenger: String,

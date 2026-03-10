@@ -1,5 +1,10 @@
-package com.example.vtsdaily3.lookup
+package com.example.vtsdaily3.feature_lookup.ui.state
 
+import com.example.vtsdaily3.feature_lookup.domain.LookupPassengerDetail
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.domain.LookupSummary
+import com.example.vtsdaily3.feature_lookup.domain.buildLookupPassengerDetail
+import com.example.vtsdaily3.feature_lookup.domain.buildLookupSummaries
 data class LookupUiState(
     val rows: List<LookupRow> = emptyList(),
     val summaries: List<LookupSummary> = emptyList(),

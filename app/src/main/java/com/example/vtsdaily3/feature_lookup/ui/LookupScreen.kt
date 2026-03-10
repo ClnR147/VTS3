@@ -1,9 +1,8 @@
-package com.example.vtsdaily3.ui.screens
+package com.example.vtsdaily3.feature_lookup.ui
 
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,20 +16,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.vtsdaily3.lookup.LookupRow
-import com.example.vtsdaily3.lookup.importLookupCsv
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.data.importLookupCsv
 import com.example.vtsdaily3.ui.template.HeaderDetailHost
 import com.example.vtsdaily3.ui.template.VtsScreenTemplate
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import java.time.LocalDate
 import java.util.Locale
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -77,7 +73,7 @@ fun LookupScreen() {
         try {
             context.contentResolver.takePersistableUriPermission(
                 uri,
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
         } catch (_: SecurityException) {
             // Fine if persistable permission is not available

@@ -3,18 +3,8 @@ package com.example.vtsdaily3
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 // import com.example.vtsdaily3.ui.theme.VTSDaily3Theme
-import androidx.activity.compose.setContent
-import com.example.vtsdaily3.ui.screens.LookupScreen
-import com.example.vtsdaily3.ui.screens.TemplateTestScreen
+import com.example.vtsdaily3.feature_lookup.ui.LookupScreen
 import com.example.vtsdaily3.ui.theme.Vts3DailyTheme
 
 class MainActivity : ComponentActivity() {

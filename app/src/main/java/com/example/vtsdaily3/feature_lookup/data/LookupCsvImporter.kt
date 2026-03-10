@@ -1,12 +1,14 @@
-package com.example.vtsdaily3.lookup
+package com.example.vtsdaily3.feature_lookup.data
 
 import android.util.Log
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.opencsv.CSVParserBuilder
 import com.opencsv.CSVReaderBuilder
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
+import kotlin.collections.plusAssign
 
 private const val TAG_IMPORT = "LookupCsvImport"
 
@@ -89,53 +91,51 @@ fun importLookupCsv(
 
             val out = mutableListOf<LookupRow>()
 
-            reader.forEach { row ->
-                val raw = mutableMapOf<String, String?>()
+            return buildList {
+                reader.forEach { row ->
+                    val raw = mutableMapOf<String, String?>()
 
-                clean.forEachIndexed { i, name ->
-                    raw[name] = at(row, i)
+                    clean.forEachIndexed { i, name ->
+                        raw[name] = at(row, i)
+                    }
+
+                    raw["PUTimeAppt"] = at(row, cols.puAppt)
+                    raw["DOTimeAppt"] = at(row, cols.doAppt)
+                    raw["RTTime"] = at(row, cols.rt)
+
+                    val driveDate = at(row, cols.driveDate)
+                    val passenger = at(row, cols.passenger) ?: return@forEach
+                    val pAddr = at(row, cols.pAddr) ?: ""
+                    val dAddr = at(row, cols.dAddr) ?: ""
+                    val phone = at(row, cols.phone)
+
+                    val ar = at(row, cols.ar)
+                    val tripType = when (ar?.firstOrNull()?.uppercaseChar()) {
+                        'A' -> "appt"
+                        'R' -> "return"
+                        else -> null
+                    }
+
+                    val pu = raw["PUTimeAppt"]
+                    val doAppt = raw["DOTimeAppt"]
+                    val rt = raw["RTTime"]
+
+                    add(
+                        LookupRow(
+                            driveDate = driveDate,
+                            passenger = passenger,
+                            pAddress = pAddr,
+                            dAddress = dAddr,
+                            phone = phone,
+                            tripType = tripType,
+                            puTimeAppt = pu,
+                            doTimeAppt = doAppt,
+                            rtTime = rt,
+                            raw = raw
+                        )
+                    )
                 }
-
-                raw["PUTimeAppt"] = at(row, cols.puAppt)
-                raw["DOTimeAppt"] = at(row, cols.doAppt)
-                raw["RTTime"] = at(row, cols.rt)
-
-                val driveDate = at(row, cols.driveDate)
-                val passenger = at(row, cols.passenger) ?: return@forEach
-                val pAddr = at(row, cols.pAddr) ?: ""
-                val dAddr = at(row, cols.dAddr) ?: ""
-                val phone = at(row, cols.phone)
-
-                val ar = at(row, cols.ar)
-                val tripType = when (ar?.firstOrNull()?.uppercaseChar()) {
-                    'A' -> "appt"
-                    'R' -> "return"
-                    else -> null
-                }
-
-                val pu = raw["PUTimeAppt"]
-                val doAppt = raw["DOTimeAppt"]
-                val rt = raw["RTTime"]
-
-                out += LookupRow(
-                    driveDate = driveDate,
-                    passenger = passenger,
-                    pAddress = pAddr,
-                    dAddress = dAddr,
-                    phone = phone,
-                    tripType = tripType,
-                    puTimeAppt = pu,
-                    doTimeAppt = doAppt,
-                    rtTime = rt,
-                    raw = raw
-                )
             }
-            Log.d(TAG_IMPORT, "Imported rows: ${out.size}")
-
-            out.take(5).forEach {
-                Log.d(TAG_IMPORT, "Row: $it")
-            }
-
 
             return out
         }

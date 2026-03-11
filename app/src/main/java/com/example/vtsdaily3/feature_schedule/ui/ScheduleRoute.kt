@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import com.example.vtsdaily3.feature_schedule.data.PoiXlsTripParser
 
 
 @Composable
@@ -37,7 +38,7 @@ fun ScheduleRoute() {
                     context = appContext,
                     folderProvider = PrefsScheduleFolderProvider(folderPrefs)
                 ),
-                tripParser = FakeXlsTripParser()
+                tripParser = PoiXlsTripParser(appContext)
             ),
             statusStore = InMemoryTripStatusStore()
         )

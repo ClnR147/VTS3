@@ -7,8 +7,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vtsdaily3.feature_schedule.data.AndroidScheduleFileCatalog
-import com.example.vtsdaily3.feature_schedule.data.FakeXlsTripParser
-import com.example.vtsdaily3.feature_schedule.data.InMemoryTripStatusStore
 import com.example.vtsdaily3.feature_schedule.data.PrefsScheduleFolderProvider
 import com.example.vtsdaily3.feature_schedule.data.RealXlsScheduleLoader
 import com.example.vtsdaily3.feature_schedule.data.ScheduleFolderPrefs
@@ -19,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import com.example.vtsdaily3.feature_schedule.data.JsonTripStatusStore
 import com.example.vtsdaily3.feature_schedule.data.PoiXlsTripParser
 
 
@@ -40,7 +39,7 @@ fun ScheduleRoute() {
                 ),
                 tripParser = PoiXlsTripParser(appContext)
             ),
-            statusStore = InMemoryTripStatusStore()
+            statusStore = JsonTripStatusStore(appContext)
         )
     }
 

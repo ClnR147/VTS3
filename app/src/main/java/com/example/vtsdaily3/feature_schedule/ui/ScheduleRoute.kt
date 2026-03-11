@@ -6,8 +6,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.vtsdaily3.feature_schedule.data.FakeScheduleFileCatalog
 import com.example.vtsdaily3.feature_schedule.data.FakeXlsScheduleLoader
+import com.example.vtsdaily3.feature_schedule.data.FakeXlsTripParser
 import com.example.vtsdaily3.feature_schedule.data.InMemoryTripStatusStore
+import com.example.vtsdaily3.feature_schedule.data.RealXlsScheduleLoader
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
 import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoader
 import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoaderImpl
@@ -18,7 +21,10 @@ fun ScheduleRoute() {
 
     val repository = remember {
         ScheduleRepositoryImpl(
-            loader = FakeXlsScheduleLoader(),
+            loader = RealXlsScheduleLoader(
+                fileCatalog = FakeScheduleFileCatalog(),
+                tripParser = FakeXlsTripParser()
+            ),
             statusStore = InMemoryTripStatusStore()
         )
     }

@@ -1,17 +1,33 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.vtsdaily3.model.TripStatus
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.vtsdaily3.feature_schedule.data.FakeXlsScheduleLoader
+import com.example.vtsdaily3.feature_schedule.data.InMemoryTripStatusStore
+import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
+import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoader
+import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoaderImpl
 
 @Composable
-fun ScheduleRoute(
-    viewModel: ScheduleViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-) {
-    val uiState = viewModel.uiState.collectAsState().value
+fun ScheduleRoute() {
+    val context = LocalContext.current
+
+    val repository = remember {
+        ScheduleRepositoryImpl(
+            loader = FakeXlsScheduleLoader(),
+            statusStore = InMemoryTripStatusStore()
+        )
+    }
+
+    val viewModel: ScheduleViewModel = viewModel(
+        factory = ScheduleViewModelFactory(repository)
+    )
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     ScheduleScreen(
         uiState = uiState,

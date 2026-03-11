@@ -3,6 +3,7 @@ package com.example.vtsdaily3.feature_schedule.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepository
+import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
 import com.example.vtsdaily3.feature_schedule.domain.DailySchedule
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiMapper
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiState
@@ -20,7 +21,7 @@ class ScheduleViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
-    val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ScheduleUiState> = _uiState
 
     private var currentDailySchedule: DailySchedule? = null
     private var selectedViewMode: TripViewMode = TripViewMode.ACTIVE
@@ -59,7 +60,8 @@ class ScheduleViewModel(
     fun goToNextAvailableDate() {
         val schedule = currentDailySchedule ?: return
         val sortedDates = schedule.availableDates.sorted()
-        val currentIndex = sortedDates.indexOf(schedule.date)
+        val currentDate = _uiState.value.selectedDate
+        val currentIndex = sortedDates.indexOf(currentDate)
 
         if (currentIndex >= 0 && currentIndex < sortedDates.lastIndex) {
             loadDate(sortedDates[currentIndex + 1])
@@ -89,27 +91,23 @@ class ScheduleViewModel(
     }
 
     fun reinstateTrip(tripId: TripId) {
-        // TODO: repository persistence not implemented yet
+        viewModelScope.launch {
+            try {
+                repository.clearTripStatus(
+                    date = _uiState.value.selectedDate,
+                    tripId = tripId
+                )
+                refreshCurrentDate()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Failed to reinstate trip."
+                )
+            }
+        }
     }
 
     private fun loadDate(date: LocalDate) {
         viewModelScope.launch {
-            val existing = currentDailySchedule
-            _uiState.value = if (existing != null) {
-                ScheduleUiMapper.map(
-                    dailySchedule = existing.copy(date = date),
-                    selectedViewMode = selectedViewMode,
-                    isLoading = true,
-                    errorMessage = null
-                )
-            } else {
-                _uiState.value.copy(
-                    selectedDate = date,
-                    isLoading = true,
-                    errorMessage = null
-                )
-            }
-
             try {
                 val dailySchedule = repository.loadSchedule(date)
                 currentDailySchedule = dailySchedule

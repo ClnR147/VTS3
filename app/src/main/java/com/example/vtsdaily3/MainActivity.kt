@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 // import com.example.vtsdaily3.ui.theme.VTSDaily3Theme
 import com.example.vtsdaily3.feature_lookup.ui.LookupScreen
+import com.example.vtsdaily3.feature_schedule.ui.ScheduleRoute
 import com.example.vtsdaily3.ui.theme.Vts3DailyTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,7 +15,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Vts3DailyTheme() {
-                LookupScreen()
+                ScheduleRoute()
             }
         }
     }

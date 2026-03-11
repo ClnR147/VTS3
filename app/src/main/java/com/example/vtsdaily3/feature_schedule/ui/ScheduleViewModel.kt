@@ -18,7 +18,9 @@ class ScheduleViewModel(
     private val repository: ScheduleRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
+    private val _uiState = MutableStateFlow(
+        ScheduleUiState(isLoading = true)
+    )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
     fun loadInitial() {
@@ -27,9 +29,13 @@ class ScheduleViewModel(
                 val dates = repository.getAvailableDates()
 
                 if (dates.isEmpty()) {
-                    _uiState.value = ScheduleUiState(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "No schedule files found"
+                        errorMessage = "No schedule files found",
+                        tripsForSelectedView = emptyList(),
+                        activeCount = 0,
+                        completedCount = 0,
+                        otherCount = 0
                     )
                     return@launch
                 }
@@ -42,7 +48,7 @@ class ScheduleViewModel(
 
                 loadDate(initialDate)
             } catch (e: Exception) {
-                _uiState.value = ScheduleUiState(
+                _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Unknown error"
                 )
@@ -57,31 +63,28 @@ class ScheduleViewModel(
     }
 
     fun refreshCurrentDate() {
-        val date = _uiState.value.selectedDate ?: return
-        selectDate(date)
+        selectDate(_uiState.value.selectedDate)
     }
 
     fun selectViewMode(mode: TripViewMode) {
-        val currentDate = _uiState.value.selectedDate ?: return
         viewModelScope.launch {
+            val currentDate = _uiState.value.selectedDate
             val schedule = repository.loadSchedule(currentDate)
             _uiState.value = schedule.toUiState(mode)
         }
     }
 
     fun markTripStatus(tripId: TripId, status: TripStatus) {
-        val date = _uiState.value.selectedDate ?: return
-
         viewModelScope.launch {
+            val date = _uiState.value.selectedDate
             repository.setTripStatus(date, tripId, status)
             loadDate(date)
         }
     }
 
     fun reinstateTrip(tripId: TripId) {
-        val date = _uiState.value.selectedDate ?: return
-
         viewModelScope.launch {
+            val date = _uiState.value.selectedDate
             repository.clearTripStatus(date, tripId)
             loadDate(date)
         }
@@ -89,7 +92,21 @@ class ScheduleViewModel(
 
     private suspend fun loadDate(date: LocalDate) {
         val viewMode = _uiState.value.selectedViewMode
-        val schedule = repository.loadSchedule(date)
-        _uiState.value = schedule.toUiState(viewMode)
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorMessage = null
+        )
+
+        try {
+            val schedule = repository.loadSchedule(date)
+            _uiState.value = schedule.toUiState(viewMode)
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                selectedDate = date,
+                isLoading = false,
+                errorMessage = e.message ?: "Unknown error"
+            )
+        }
     }
 }

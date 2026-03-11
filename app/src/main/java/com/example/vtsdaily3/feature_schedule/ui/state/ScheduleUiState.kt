@@ -12,5 +12,7 @@ data class ScheduleUiState(
     val activeCount: Int = 0,
     val completedCount: Int = 0,
     val otherCount: Int = 0,
+    val canGoToPreviousDate: Boolean = false,
+    val canGoToNextDate: Boolean = false,
     val errorMessage: String? = null
 )

@@ -28,6 +28,7 @@ class ScheduleRepositoryImpl(
 
         return DailySchedule(
             date = date,
+            availableDates = availableDates,
             trips = mergedTrips
         )
     }

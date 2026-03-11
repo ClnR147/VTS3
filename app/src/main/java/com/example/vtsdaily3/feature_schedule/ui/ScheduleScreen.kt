@@ -46,35 +46,34 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun ScheduleScreen(
-    state: ScheduleUiState,
-    onAction: (ScheduleUiAction) -> Unit,
-    modifier: Modifier = Modifier
+    uiState: ScheduleUiState,
+    onSelectDate: (LocalDate) -> Unit,
+    onSelectViewMode: (TripViewMode) -> Unit,
+    onMarkTripStatus: (TripId, TripStatus) -> Unit,
+    onReinstateTrip: (TripId) -> Unit,
+    onRefresh: () -> Unit,
+    onPreviousDate: () -> Unit,
+    onNextDate: () -> Unit
 ) {
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         ScheduleDateHeader(
-            selectedDate = state.selectedDate,
-            onPreviousClick = {
-                onAction(ScheduleUiAction.PreviousDayClicked)
-            },
-            onNextClick = {
-                onAction(ScheduleUiAction.NextDayClicked)
-            }
+            selectedDate = uiState.selectedDate,
+            onPreviousClick = onPreviousDate,
+            onNextClick = onNextDate
         )
 
         ScheduleTabs(
-            selectedViewMode = state.selectedViewMode,
-            activeCount = state.activeCount,
-            completedCount = state.completedCount,
-            otherCount = state.otherCount,
-            onTabSelected = { mode ->
-                onAction(ScheduleUiAction.ViewModeSelected(mode))
-            }
+            selectedViewMode = uiState.selectedViewMode,
+            activeCount = uiState.activeCount,
+            completedCount = uiState.completedCount,
+            otherCount = uiState.otherCount,
+            onTabSelected = onSelectViewMode
         )
 
         when {
-            state.isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -83,9 +82,9 @@ fun ScheduleScreen(
                 }
             }
 
-            state.tripsForSelectedView.isEmpty() -> {
+            uiState.tripsForSelectedView.isEmpty() -> {
                 EmptyScheduleState(
-                    viewMode = state.selectedViewMode,
+                    viewMode = uiState.selectedViewMode,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -97,19 +96,30 @@ fun ScheduleScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = state.tripsForSelectedView,
+                        items = uiState.tripsForSelectedView,
                         key = { trip -> trip.id.toString() }
                     ) { trip ->
                         TripCard(
                             trip = trip,
-                            viewMode = state.selectedViewMode,
+                            viewMode = uiState.selectedViewMode,
                             onTripActionSelected = { menuAction ->
-                                onAction(
-                                    ScheduleUiAction.TripActionSelected(
-                                        tripId = trip.id,
-                                        action = menuAction
-                                    )
-                                )
+                                when (menuAction) {
+                                    TripMenuAction.COMPLETE -> {
+                                        onMarkTripStatus(trip.id, TripStatus.COMPLETED)
+                                    }
+                                    TripMenuAction.NOSHOW -> {
+                                        onMarkTripStatus(trip.id, TripStatus.NOSHOW)
+                                    }
+                                    TripMenuAction.CANCEL -> {
+                                        onMarkTripStatus(trip.id, TripStatus.CANCELLED)
+                                    }
+                                    TripMenuAction.REMOVE -> {
+                                        onMarkTripStatus(trip.id, TripStatus.REMOVED)
+                                    }
+                                    TripMenuAction.REINSTATE -> {
+                                        onReinstateTrip(trip.id)
+                                    }
+                                }
                             }
                         )
                     }
@@ -363,7 +373,7 @@ enum class TripMenuAction(val label: String) {
 @Composable
 private fun ScheduleScreenPreviewActive() {
     ScheduleScreen(
-        state = previewState(
+        uiState = previewState(
             mode = TripViewMode.ACTIVE,
             trips = listOf(
                 previewTrip(
@@ -378,7 +388,13 @@ private fun ScheduleScreenPreviewActive() {
                 )
             )
         ),
-        onAction = {}
+        onSelectDate = {},
+        onSelectViewMode = {},
+        onMarkTripStatus = { _, _ -> },
+        onReinstateTrip = {},
+        onRefresh = {},
+        onPreviousDate = {},
+        onNextDate = {}
     )
 }
 
@@ -386,7 +402,7 @@ private fun ScheduleScreenPreviewActive() {
 @Composable
 private fun ScheduleScreenPreviewCompleted() {
     ScheduleScreen(
-        state = previewState(
+        uiState = previewState(
             mode = TripViewMode.COMPLETED,
             trips = listOf(
                 previewTrip(
@@ -396,7 +412,13 @@ private fun ScheduleScreenPreviewCompleted() {
                 )
             )
         ),
-        onAction = {}
+        onSelectDate = {},
+        onSelectViewMode = {},
+        onMarkTripStatus = { _, _ -> },
+        onReinstateTrip = {},
+        onRefresh = {},
+        onPreviousDate = {},
+        onNextDate = {}
     )
 }
 
@@ -404,7 +426,7 @@ private fun ScheduleScreenPreviewCompleted() {
 @Composable
 private fun ScheduleScreenPreviewOther() {
     ScheduleScreen(
-        state = previewState(
+        uiState = previewState(
             mode = TripViewMode.OTHER,
             trips = listOf(
                 previewTrip(
@@ -419,7 +441,13 @@ private fun ScheduleScreenPreviewOther() {
                 )
             )
         ),
-        onAction = {}
+        onSelectDate = {},
+        onSelectViewMode = {},
+        onMarkTripStatus = { _, _ -> },
+        onReinstateTrip = {},
+        onRefresh = {},
+        onPreviousDate = {},
+        onNextDate = {}
     )
 }
 
@@ -427,11 +455,17 @@ private fun ScheduleScreenPreviewOther() {
 @Composable
 private fun ScheduleScreenPreviewEmpty() {
     ScheduleScreen(
-        state = previewState(
+        uiState = previewState(
             mode = TripViewMode.ACTIVE,
             trips = emptyList()
         ),
-        onAction = {}
+        onSelectDate = {},
+        onSelectViewMode = {},
+        onMarkTripStatus = { _, _ -> },
+        onReinstateTrip = {},
+        onRefresh = {},
+        onPreviousDate = {},
+        onNextDate = {}
     )
 }
 

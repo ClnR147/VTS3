@@ -12,7 +12,8 @@ firebaseCrashlyticsBuildtools = "3.0.6"
 gson = "2.10.1"
 ui = "1.10.4"
 compiler = "3.2.0-alpha11"
-documentfile = "1.1.0"
+documentfile = "1.0.1"
+poi = "5.2.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +35,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-compiler = { group = "androidx.databinding", name = "compiler", version.ref = "compiler" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+apache-poi = { group = "org.apache.poi", name = "poi", version.ref = "poi" }
 
 
 [plugins]

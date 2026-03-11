@@ -6,27 +6,50 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.vtsdaily3.feature_schedule.data.FakeScheduleFileCatalog
-import com.example.vtsdaily3.feature_schedule.data.FakeXlsScheduleLoader
+import com.example.vtsdaily3.feature_schedule.data.AndroidScheduleFileCatalog
 import com.example.vtsdaily3.feature_schedule.data.FakeXlsTripParser
 import com.example.vtsdaily3.feature_schedule.data.InMemoryTripStatusStore
+import com.example.vtsdaily3.feature_schedule.data.PrefsScheduleFolderProvider
 import com.example.vtsdaily3.feature_schedule.data.RealXlsScheduleLoader
+import com.example.vtsdaily3.feature_schedule.data.ScheduleFolderPrefs
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
-import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoader
-import com.example.vtsdaily3.feature_schedule.data.XlsScheduleLoaderImpl
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 
 @Composable
 fun ScheduleRoute() {
     val context = LocalContext.current
+    val appContext = context.applicationContext
+
+    val folderPrefs = remember {
+        ScheduleFolderPrefs(appContext)
+    }
 
     val repository = remember {
         ScheduleRepositoryImpl(
             loader = RealXlsScheduleLoader(
-                fileCatalog = FakeScheduleFileCatalog(),
+                fileCatalog = AndroidScheduleFileCatalog(
+                    context = appContext,
+                    folderProvider = PrefsScheduleFolderProvider(folderPrefs)
+                ),
                 tripParser = FakeXlsTripParser()
             ),
             statusStore = InMemoryTripStatusStore()
         )
+    }
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            folderPrefs.saveFolderUri(uri.toString())
+        }
     }
 
     val viewModel: ScheduleViewModel = viewModel(

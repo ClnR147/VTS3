@@ -16,6 +16,9 @@ import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 
 
 @Composable
@@ -58,14 +61,22 @@ fun ScheduleRoute() {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    ScheduleScreen(
-        uiState = uiState,
-        onSelectDate = viewModel::selectDate,
-        onSelectViewMode = viewModel::selectViewMode,
-        onMarkTripStatus = viewModel::markTripStatus,
-        onReinstateTrip = viewModel::reinstateTrip,
-        onRefresh = viewModel::refreshCurrentDate,
-        onPreviousDate = viewModel::goToPreviousAvailableDate,
-        onNextDate = viewModel::goToNextAvailableDate
-    )
+    Column {
+        Button(
+            onClick = { folderPickerLauncher.launch(null) }
+        ) {
+            Text("Pick Schedule Folder")
+        }
+
+        ScheduleScreen(
+            uiState = uiState,
+            onSelectDate = viewModel::selectDate,
+            onSelectViewMode = viewModel::selectViewMode,
+            onMarkTripStatus = viewModel::markTripStatus,
+            onReinstateTrip = viewModel::reinstateTrip,
+            onRefresh = viewModel::refreshCurrentDate,
+            onPreviousDate = viewModel::goToPreviousAvailableDate,
+            onNextDate = viewModel::goToNextAvailableDate
+        )
+    }
 }

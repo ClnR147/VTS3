@@ -2,6 +2,7 @@ package com.example.vtsdaily3.feature_schedule.data
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.example.vtsdaily3.model.Trip
 import com.example.vtsdaily3.model.TripId
@@ -115,6 +116,8 @@ class XlsScheduleLoaderImpl(
                 )
             }
         }
+
+        Log.d("VTS3", "Parsed trips: ${trips.size}")
 
         return trips
     }

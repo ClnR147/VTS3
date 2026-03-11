@@ -27,7 +27,7 @@ fun ScheduleRoute() {
                 context = context,
                 folderUri = folderUri
             ),
-            statusStore = TripStatusStoreImpl()
+            statusStore = TripStatusStoreImpl(context)
         )
     )
 

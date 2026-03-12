@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,9 +63,11 @@ import com.example.vtsdaily3.ui.theme.FromGrey
 import com.example.vtsdaily3.ui.theme.RemovedColor
 import com.example.vtsdaily3.ui.theme.VtsError
 import com.example.vtsdaily3.ui.theme.VtsWarning
+import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
+
 
 
 @Composable
@@ -84,7 +87,10 @@ fun ScheduleScreen(
         )
     }
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 12.dp)
     ) {
         ScheduleHeaderCard(
             selectedDateText = formattedSelectedDate,
@@ -94,8 +100,8 @@ fun ScheduleScreen(
             otherCount = uiState.otherCount,
             onPreviousDate = onPreviousDate,
             onNextDate = onNextDate,
-            onSelectViewMode = onSelectViewMode,
-            modifier = Modifier.padding(top = 32.dp)
+            onSelectViewMode = onSelectViewMode
+
         )
 
         when {
@@ -180,7 +186,10 @@ private fun TripCard(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f))
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+        )
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
@@ -424,7 +433,10 @@ fun ScheduleHeaderCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFEAF4EA)
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
         )
     ) {
         Column(

@@ -3,7 +3,6 @@ package com.example.vtsdaily3.feature_schedule.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepository
-import com.example.vtsdaily3.feature_schedule.data.ScheduleRepositoryImpl
 import com.example.vtsdaily3.feature_schedule.domain.DailySchedule
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiMapper
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiState
@@ -11,7 +10,6 @@ import com.example.vtsdaily3.model.TripStatus
 import com.example.vtsdaily3.model.TripViewMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import com.example.vtsdaily3.model.TripId
@@ -47,25 +45,30 @@ class ScheduleViewModel(
     }
 
     fun goToPreviousAvailableDate() {
-        val schedule = currentDailySchedule ?: return
-        val sortedDates = schedule.availableDates.sorted()
+        val dates = _uiState.value.availableDates
         val currentDate = _uiState.value.selectedDate
-        val currentIndex = sortedDates.indexOf(currentDate)
 
-        if (currentIndex > 0) {
-            loadDate(sortedDates[currentIndex - 1])
-        }
+        if (dates.isEmpty()) return
+
+        val currentIndex = dates.indexOf(currentDate)
+        if (currentIndex <= 0) return
+
+        val previousDate = dates[currentIndex - 1]
+        loadDate(previousDate)
     }
 
     fun goToNextAvailableDate() {
-        val schedule = currentDailySchedule ?: return
-        val sortedDates = schedule.availableDates.sorted()
+        val dates = _uiState.value.availableDates
         val currentDate = _uiState.value.selectedDate
-        val currentIndex = sortedDates.indexOf(currentDate)
 
-        if (currentIndex >= 0 && currentIndex < sortedDates.lastIndex) {
-            loadDate(sortedDates[currentIndex + 1])
-        }
+        if (dates.isEmpty()) return
+
+        val currentIndex = dates.indexOf(currentDate)
+        if (currentIndex == -1) return
+        if (currentIndex >= dates.lastIndex) return
+
+        val nextDate = dates[currentIndex + 1]
+        loadDate(nextDate)
     }
 
     fun refreshCurrentDate() {

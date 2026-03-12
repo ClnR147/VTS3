@@ -6,13 +6,12 @@ import java.time.LocalDate
 
 data class ScheduleUiState(
     val selectedDate: LocalDate = LocalDate.now(),
+    val availableDates: List<LocalDate> = emptyList(),
     val selectedViewMode: TripViewMode = TripViewMode.ACTIVE,
     val isLoading: Boolean = false,
     val tripsForSelectedView: List<Trip> = emptyList(),
     val activeCount: Int = 0,
     val completedCount: Int = 0,
     val otherCount: Int = 0,
-    val canGoToPreviousDate: Boolean = false,
-    val canGoToNextDate: Boolean = false,
     val errorMessage: String? = null
 )

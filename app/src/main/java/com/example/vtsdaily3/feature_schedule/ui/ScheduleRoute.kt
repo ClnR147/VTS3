@@ -1,6 +1,7 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -21,15 +21,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.setValue
+import com.example.vtsdaily3.data.ScheduleFolderPrefs
 import com.example.vtsdaily3.feature_schedule.di.ScheduleModule
 
 @Composable
 fun ScheduleRoute() {
     val context = LocalContext.current
-    val folderPrefs = remember { ScheduleModule.createFolderPrefs(context) }
 
-    var savedFolderUri by remember {
-        mutableStateOf(folderPrefs.getFolderUri())
+    var savedFolderUri: Uri? by remember {
+        mutableStateOf<Uri?>(ScheduleFolderPrefs.load(context))
     }
 
     val factory = remember(savedFolderUri) {
@@ -44,13 +45,13 @@ fun ScheduleRoute() {
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            folderPrefs.saveFolderUri(uri.toString())
-            savedFolderUri = uri.toString()
+            ScheduleFolderPrefs.save(context, uri)
+            savedFolderUri = uri
         }
     }
 
     LaunchedEffect(savedFolderUri) {
-        if (savedFolderUri.isNullOrBlank()) {
+        if (savedFolderUri == null) {
             folderPickerLauncher.launch(null)
         }
     }
@@ -59,7 +60,7 @@ fun ScheduleRoute() {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when {
-        savedFolderUri.isNullOrBlank() -> {
+        savedFolderUri == null -> {
             ScheduleRouteMessage(
                 message = "Please select your PassengerSchedules folder."
             )

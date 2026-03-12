@@ -32,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -92,6 +93,17 @@ fun ScheduleScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 12.dp)
     ) {
+
+        Text(
+            text = "Schedule",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        )
+
         ScheduleHeaderCard(
             selectedDateText = formattedSelectedDate,
             selectedViewMode = uiState.selectedViewMode,
@@ -102,6 +114,13 @@ fun ScheduleScreen(
             onNextDate = onNextDate,
             onSelectViewMode = onSelectViewMode
 
+        )
+        Spacer(Modifier.height(10.dp))
+
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outline
         )
 
         when {
@@ -459,7 +478,7 @@ fun ScheduleHeaderCard(
                         .weight(1f)
                         .padding(horizontal = 12.dp),
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF1F2A1F)
                 )
@@ -535,8 +554,8 @@ private fun HeaderNavButton(
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .width(96.dp)
-            .height(44.dp),
+            .width(80.dp)
+            .height(36.dp),
         shape = RoundedCornerShape(24.dp),
         border = BorderStroke(1.5.dp, Color(0xFFB8C8B8)),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
@@ -547,7 +566,7 @@ private fun HeaderNavButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -568,7 +587,7 @@ private fun ViewModeButton(
     if (selected) {
         Button(
             onClick = onClick,
-            modifier = modifier.height(44.dp),
+            modifier = modifier.height(36.dp),
             shape = RoundedCornerShape(24.dp),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
             colors = ButtonDefaults.buttonColors(
@@ -585,7 +604,7 @@ private fun ViewModeButton(
     } else {
         OutlinedButton(
             onClick = onClick,
-            modifier = modifier.height(44.dp),
+            modifier = modifier.height(36.dp),
             shape = RoundedCornerShape(24.dp),
             border = BorderStroke(1.5.dp, unselectedBorder),
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),

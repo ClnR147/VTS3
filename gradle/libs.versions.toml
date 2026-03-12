@@ -15,6 +15,7 @@ compiler = "3.2.0-alpha11"
 documentfile = "1.0.1"
 poi = "5.2.5"
 runtime = "1.10.4"
+foundation = "1.10.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,7 @@ androidx-compiler = { group = "androidx.databinding", name = "compiler", version
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 apache-poi = { group = "org.apache.poi", name = "poi", version.ref = "poi" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 
 [plugins]

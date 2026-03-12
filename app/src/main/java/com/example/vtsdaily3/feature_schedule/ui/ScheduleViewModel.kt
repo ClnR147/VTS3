@@ -44,20 +44,7 @@ class ScheduleViewModel(
         )
     }
 
-    fun goToPreviousAvailableDate() {
-        val dates = _uiState.value.availableDates
-        val currentDate = _uiState.value.selectedDate
-
-        if (dates.isEmpty()) return
-
-        val currentIndex = dates.indexOf(currentDate)
-        if (currentIndex <= 0) return
-
-        val previousDate = dates[currentIndex - 1]
-        loadDate(previousDate)
-    }
-
-    fun goToNextAvailableDate() {
+    private fun navigateBy(offset: Int) {
         val dates = _uiState.value.availableDates
         val currentDate = _uiState.value.selectedDate
 
@@ -65,11 +52,16 @@ class ScheduleViewModel(
 
         val currentIndex = dates.indexOf(currentDate)
         if (currentIndex == -1) return
-        if (currentIndex >= dates.lastIndex) return
 
-        val nextDate = dates[currentIndex + 1]
-        loadDate(nextDate)
+        val targetIndex = currentIndex + offset
+        if (targetIndex !in dates.indices) return
+
+        loadDate(dates[targetIndex])
     }
+
+    fun goToPreviousAvailableDate() = navigateBy(-1)
+
+    fun goToNextAvailableDate() = navigateBy(1)
 
     fun refreshCurrentDate() {
         val date = currentDailySchedule?.date ?: _uiState.value.selectedDate
@@ -110,6 +102,12 @@ class ScheduleViewModel(
     }
 
     private fun loadDate(date: LocalDate) {
+        _uiState.value = _uiState.value.copy(
+            selectedDate = date,
+            isLoading = true,
+            errorMessage = null
+        )
+
         viewModelScope.launch {
             try {
                 val dailySchedule = repository.loadSchedule(date)

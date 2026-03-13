@@ -123,6 +123,7 @@ fun LookupScreen() {
     }
 
     VtsScreenTemplate(
+
         title = "Passenger Lookup",
         showControls = selectedSummary == null,
 
@@ -218,13 +219,12 @@ fun LookupScreen() {
             },
 
             detail = { _, onBack ->
-                val summary = selectedSummary
 
-                if (summary == null) {
+                if (selectedSummary == null) {
                     LookupEmptyState(message = "Passenger not found.")
                 } else {
                     LookupDetailScreen(
-                        summary = summary,
+                        summary = selectedSummary,
                         onBack = onBack
                     )
                 }
@@ -479,7 +479,7 @@ private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassenger
                 phone = phone,
                 tripCount = trips.size,
                 trips = trips.sortedWith(
-                    compareBy<LookupRow>(
+                    compareBy(
                         { parseLookupDate(it.driveDate) ?: LocalDate.MAX },
                         { it.pAddress.orEmpty().trim().lowercase(Locale.getDefault()) },
                         { it.dAddress.orEmpty().trim().lowercase(Locale.getDefault()) },

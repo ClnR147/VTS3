@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.ui.theme.VtsDivider
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import com.example.vtsdaily3.ui.theme.VtsSpacing
@@ -27,7 +28,7 @@ fun VtsScreenTemplate(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = VtsSpacing.xl)
+            .padding(top = VtsSpacing.sm)
     ) {
         Row(
             modifier = Modifier
@@ -35,32 +36,35 @@ fun VtsScreenTemplate(
                 .padding(horizontal = VtsSpacing.md, vertical = VtsSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.size(VtsSpacing.headerButtonSize))
+            Box(
+                modifier = Modifier.size(VtsSpacing.headerButtonSize)
+            )
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 12.dp, bottom = 8.dp),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
-            if (showControls) {
-                Box(
-                    modifier = Modifier.size(VtsSpacing.headerButtonSize),
-                    contentAlignment = Alignment.Center
-                ) {
+            Box(
+                modifier = Modifier.size(VtsSpacing.headerButtonSize),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showControls) {
                     dropdown?.invoke()
                 }
-            } else {
-                Box(modifier = Modifier.size(VtsSpacing.headerButtonSize))
             }
         }
 
         Box(
             modifier = Modifier.padding(horizontal = VtsSpacing.md)
         ) {
-            VtsThickDivider()
+
         }
 
 

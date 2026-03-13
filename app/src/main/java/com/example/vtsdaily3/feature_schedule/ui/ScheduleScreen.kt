@@ -68,7 +68,7 @@ import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
-
+import com.example.vtsdaily3.ui.template.VtsScreenTemplate
 
 
 @Composable
@@ -91,9 +91,8 @@ fun ScheduleScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 10.dp)
     ) {
-
         Text(
             text = "Schedule",
             style = MaterialTheme.typography.headlineMedium,
@@ -101,7 +100,8 @@ fun ScheduleScreen(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            textAlign = TextAlign.Center
         )
 
         ScheduleHeaderCard(
@@ -113,14 +113,6 @@ fun ScheduleScreen(
             onPreviousDate = onPreviousDate,
             onNextDate = onNextDate,
             onSelectViewMode = onSelectViewMode
-
-        )
-        Spacer(Modifier.height(10.dp))
-
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline
         )
 
         when {
@@ -467,10 +459,12 @@ fun ScheduleHeaderCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HeaderNavButton(
-                    text = "Prev",
-                    onClick = onPreviousDate
-                )
+                IconButton(onClick = onPreviousDate) {
+                    Text(
+                        text = "<",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
 
                 Text(
                     text = selectedDateText,
@@ -479,14 +473,15 @@ fun ScheduleHeaderCard(
                         .padding(horizontal = 12.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1F2A1F)
+                    fontWeight = FontWeight.SemiBold
                 )
 
-                HeaderNavButton(
-                    text = "Next",
-                    onClick = onNextDate
-                )
+                IconButton(onClick = onNextDate) {
+                    Text(
+                        text = ">",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -513,31 +508,6 @@ fun ScheduleHeaderCard(
                     label = "Other",
                     selected = selectedViewMode == TripViewMode.OTHER,
                     onClick = { onSelectViewMode(TripViewMode.OTHER) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                HeaderCountItem(
-                    count = activeCount,
-                    accentColor = Color(0xFF2E7D32),
-                    modifier = Modifier.weight(1f)
-                )
-
-                HeaderCountItem(
-                    count = completedCount,
-                    accentColor = Color(0xFF1565C0),
-                    modifier = Modifier.weight(1f)
-                )
-
-                HeaderCountItem(
-                    count = otherCount,
-                    accentColor = Color(0xFFEF6C00),
                     modifier = Modifier.weight(1f)
                 )
             }

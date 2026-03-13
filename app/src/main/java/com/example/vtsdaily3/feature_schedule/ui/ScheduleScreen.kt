@@ -95,13 +95,13 @@ fun ScheduleScreen(
     ) {
         Text(
             text = "Schedule",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            textAlign = TextAlign.Center
+                .padding(top = 20.dp, bottom = 8.dp),   // hardcoded to match template
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         ScheduleHeaderCard(

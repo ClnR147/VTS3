@@ -26,10 +26,17 @@ import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_lookup.domain.LookupPassengerDetail
+import com.example.vtsdaily3.feature_lookup.domain.LookupSummary
+import com.example.vtsdaily3.feature_lookup.domain.LookupTripDetail
+import com.example.vtsdaily3.feature_lookup.domain.buildLookupPassengerDetail
+import com.example.vtsdaily3.feature_lookup.ui.state.buildLookupUiState
 import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
@@ -38,28 +45,24 @@ import com.example.vtsdaily3.ui.components.VtsSearchField
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.util.VtsDateFormat
+import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
 
 @Composable
 fun LookupScreen() {
     var searchQuery by remember { mutableStateOf("") }
     var selectedPassengerKey by remember { mutableStateOf<String?>(null) }
+    var selectedPassengerName by remember { mutableStateOf<String?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
-    var importedRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
-
-    val summaries = remember(importedRows) {
-        buildPassengerSummaries(importedRows)
-    }
+    var uiState by remember { mutableStateOf(LookupUiState()) }
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        val savedUri = loadLookupUri(context) ?: return@LaunchedEffect
-
-        runCatching {
-            context.contentResolver.openInputStream(savedUri)?.use { input ->
-                importedRows = importLookupCsv(input)
-            }
+    val selectedDetail = remember(uiState.rows, selectedPassengerName) {
+        selectedPassengerName?.let { passengerName ->
+            buildLookupPassengerDetail(uiState.rows, passengerName)
         }
+    }
+    LaunchedEffect(Unit) {
+        uiState = buildLookupUiState(LookupStore.load(context))
     }
 
     val importLauncher = rememberLauncherForActivityResult(
@@ -82,7 +85,8 @@ fun LookupScreen() {
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 val rows = importLookupCsv(input)
-                importedRows = rows
+                uiState.rows = rows
+                LookupStore.save(context, rows)
                 selectedPassengerKey = null
                 searchQuery = ""
                 saveLookupUri(context, uri)
@@ -92,34 +96,34 @@ fun LookupScreen() {
         }
     }
 
-    val filteredSummaries = remember(summaries, searchQuery, sortMode) {
-        summaries
+    val filteredSummaries = remember(uiState.summaries, searchQuery, sortMode) {
+        uiState.summaries
             .filter { summary ->
                 val q = searchQuery.trim().lowercase(Locale.getDefault())
                 q.isBlank() ||
-                        summary.passenger.lowercase(Locale.getDefault()).contains(q) ||
-                        summary.phone.orEmpty().lowercase(Locale.getDefault()).contains(q)
+                        summary.passenger.lowercase(Locale.getDefault()).contains(q)
             }
             .let { list ->
                 when (sortMode) {
                     LookupSortMode.NAME ->
                         list.sortedWith(
-                            compareBy<LookupPassengerSummary> { it.passenger.lowercase(Locale.getDefault()) }
+                            compareBy<LookupSummary> { it.passenger.lowercase(Locale.getDefault()) }
                                 .thenByDescending { it.tripCount }
                         )
 
                     LookupSortMode.TRIPS ->
                         list.sortedWith(
-                            compareByDescending<LookupPassengerSummary> { it.tripCount }
+                            compareByDescending<LookupSummary> { it.tripCount }
                                 .thenBy { it.passenger.lowercase(Locale.getDefault()) }
                         )
                 }
             }
     }
 
-    val selectedSummary = remember(filteredSummaries, selectedPassengerKey, summaries) {
-        val source = if (selectedPassengerKey == null) emptyList() else summaries
-        source.firstOrNull { it.key == selectedPassengerKey }
+
+    val selectedSummary = remember(filteredSummaries, selectedPassengerKey, uiState.summaries) {
+        val source = if (selectedPassengerKey == null) emptyList() else uiState.summaries
+        source.firstOrNull { it.passenger == selectedPassengerKey }
     }
 
     VtsScreenTemplate(
@@ -190,7 +194,7 @@ fun LookupScreen() {
 
             summary = { onSelect ->
                 when {
-                    importedRows.isEmpty() -> {
+                    uiState.rows.isEmpty() -> {
                         LookupEmptyState(
                             message = "No lookup data loaded yet.\nUse the menu to import a CSV."
                         )
@@ -210,11 +214,11 @@ fun LookupScreen() {
                         ) {
                             items(
                                 items = filteredSummaries,
-                                key = { it.key }
+                                key = { it.passenger }
                             ) { summary ->
                                 LookupSummaryCard(
                                     summary = summary,
-                                    onClick = { onSelect(summary.key) }
+                                    onClick = { onSelect(summary.passenger) }
                                 )
                             }
                         }
@@ -224,11 +228,11 @@ fun LookupScreen() {
 
             detail = { _, onBack ->
 
-                if (selectedSummary == null) {
+                if (selectedDetail == null) {
                     LookupEmptyState(message = "Passenger not found.")
                 } else {
                     LookupDetailScreen(
-                        summary = selectedSummary,
+                        detail = selectedDetail,
                         onBack = onBack
                     )
                 }
@@ -239,7 +243,7 @@ fun LookupScreen() {
 
 @Composable
 private fun LookupSummaryCard(
-    summary: LookupPassengerSummary,
+    summary: LookupSummary,
     onClick: () -> Unit
 ) {
     VtsCard(
@@ -254,19 +258,10 @@ private fun LookupSummaryCard(
 }
 @Composable
 private fun LookupDetailScreen(
-    summary: LookupPassengerSummary,
-    onBack: () -> Unit
+    detail: LookupPassengerDetail,
+    onBack: () -> Unit,
 ) {
-    val tripsByDate = remember(summary.trips) {
-        summary.trips
-            .groupBy { normalizedDisplayDate(it.driveDate) }
-            .toList()
-            .sortedBy { (_, tripsForDate) ->
-                tripsForDate.minOfOrNull {
-                    parseLookupDate(it.driveDate) ?: LocalDate.MAX
-                } ?: LocalDate.MAX
-            }
-    }
+
 
     Box(
         modifier = Modifier
@@ -280,16 +275,16 @@ private fun LookupDetailScreen(
         ) {
             item {
                 VtsScreenHeader(
-                    title = summary.passenger,
-                    subtitle = summary.phone,
+                    title = detail.passenger,
+                    subtitle = detail.phone,
                     showDivider = false
                 )
             }
 
-            items(tripsByDate) { (date, tripsForDate) ->
+            items(detail.dayGroups) { dayGroup ->
                 LookupTripDateCard(
-                    date = date,
-                    trips = tripsForDate
+                    date = dayGroup.driveDate.orEmpty(),
+                    trips = dayGroup.trips
                 )
             }
 
@@ -311,7 +306,7 @@ private fun LookupDetailScreen(
 @Composable
 private fun LookupTripDateCard(
     date: String,
-    trips: List<LookupRow>
+    trips: List<LookupTripDetail>
 ) {
     VtsCard {
         Text(
@@ -335,11 +330,11 @@ private fun LookupTripDateCard(
             ) {
                 LookupLabelValueRow(
                     label = "Pickup:",
-                    value = trip.pAddress.orEmpty()
+                    value = trip.pickup
                 )
                 LookupLabelValueRow(
                     label = "Drop-off:",
-                    value = trip.dAddress.orEmpty()
+                    value = trip.dropoff
                 )
             }
         }
@@ -413,16 +408,24 @@ private fun LookupSortBar(
         if (selected == LookupSortMode.NAME) {
             Button(
                 onClick = onSortName,
-                modifier = Modifier.weight(1f),
-                colors = selectedColors
+                modifier = Modifier
+                    .weight(1f)
+                    .height(36.dp),
+                colors = selectedColors,
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text("Name")
             }
         } else {
             OutlinedButton(
                 onClick = onSortName,
-                modifier = Modifier.weight(1f),
-                colors = unselectedColors
+                modifier = Modifier
+                    .weight(1f)
+                    .height(36.dp),
+                colors = unselectedColors,
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text("Name")
             }

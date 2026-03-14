@@ -44,7 +44,7 @@ class PoiXlsTripParser(
 
             val trips = mutableListOf<Trip>()
 
-            for (r in (headerRowIndex + 1)..sheet.lastRowNum) {
+            for (r in headerRowIndex..sheet.lastRowNum) {
                 val row = sheet.getRow(r) ?: continue
 
                 val nameRaw = cellString(row.getCell(0)).trim()      // A = Name

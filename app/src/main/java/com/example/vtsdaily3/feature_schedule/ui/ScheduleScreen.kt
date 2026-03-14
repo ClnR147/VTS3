@@ -7,6 +7,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -69,6 +70,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
 import com.example.vtsdaily3.ui.template.VtsScreenTemplate
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 
 
 @Composable
@@ -92,12 +102,13 @@ fun ScheduleScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 10.dp)
+
     ) {
         Text(
             text = "Schedule",
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 8.dp),   // hardcoded to match template
+                    .padding(top = 30.dp, bottom = 8.dp),   // hardcoded to match template
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
@@ -453,7 +464,8 @@ fun ScheduleHeaderCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)
+
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -484,7 +496,7 @@ fun ScheduleHeaderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -543,7 +555,7 @@ private fun HeaderNavButton(
 }
 
 @Composable
-private fun ViewModeButton(
+fun ViewModeButton(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -726,3 +738,4 @@ private fun TripStatus.otherLabelV3(): String = when (this) {
     TripStatus.REMOVED -> "REMOVED"
     else -> ""
 }
+

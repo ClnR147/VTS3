@@ -161,7 +161,11 @@ fun LookupScreen() {
 
         searchBar = {
             Box(
-                modifier = Modifier.padding(horizontal = VtsSpacing.md)
+                modifier = Modifier.padding(
+                    start = VtsSpacing.sm,
+                    end = VtsSpacing.sm,
+                    top = 0.dp
+                )
             ) {
                 VtsSearchField(
                     value = searchQuery,

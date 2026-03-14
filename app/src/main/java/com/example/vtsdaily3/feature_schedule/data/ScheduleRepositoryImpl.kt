@@ -15,7 +15,11 @@ class ScheduleRepositoryImpl(
     }
 
     override suspend fun loadSchedule(date: LocalDate): DailySchedule {
-        val rawTrips = loader.loadTrips(date)
+        val rawTrips = try {
+            loader.loadTrips(date)
+        } catch (e: Exception) {
+            emptyList()
+        }
 
         val statuses = statusStore.loadStatuses(date)
         val statusMap = statuses.associate { it.tripId to it.status }

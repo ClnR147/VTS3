@@ -13,13 +13,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import com.example.vtsdaily3.model.TripId
+import kotlinx.coroutines.flow.asStateFlow
 
 class ScheduleViewModel(
     private val repository: ScheduleRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
-    val uiState: StateFlow<ScheduleUiState> = _uiState
+    val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
     private var currentDailySchedule: DailySchedule? = null
     private var selectedViewMode: TripViewMode = TripViewMode.ACTIVE
@@ -45,15 +46,25 @@ class ScheduleViewModel(
     }
 
     private fun navigateBy(offset: Int) {
-        val dates = _uiState.value.availableDates
+        val dates = _uiState.value.availableDates.sorted()
         val currentDate = _uiState.value.selectedDate
 
         if (dates.isEmpty()) return
 
         val currentIndex = dates.indexOf(currentDate)
-        if (currentIndex == -1) return
 
-        val targetIndex = currentIndex + offset
+        val targetIndex = if (currentIndex != -1) {
+            currentIndex + offset
+        } else {
+            val insertionPoint = dates.indexOfFirst { it > currentDate }
+            when {
+                offset < 0 && insertionPoint == -1 -> dates.lastIndex
+                offset < 0 -> (insertionPoint - 1).coerceAtLeast(0)
+                offset > 0 && insertionPoint == -1 -> return
+                else -> insertionPoint
+            }
+        }
+
         if (targetIndex !in dates.indices) return
 
         loadDate(dates[targetIndex])

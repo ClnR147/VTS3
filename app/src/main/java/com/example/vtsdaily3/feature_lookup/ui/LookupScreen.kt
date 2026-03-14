@@ -26,6 +26,7 @@ import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
@@ -54,7 +55,10 @@ fun LookupScreen() {
     var menuExpanded by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
     var uiState by remember { mutableStateOf(LookupUiState()) }
+
     val context = LocalContext.current
+    val summaryListState = rememberLazyListState()
+
     val selectedDetail = remember(uiState.rows, selectedPassengerName) {
         selectedPassengerName?.let { passengerName ->
             buildLookupPassengerDetail(uiState.rows, passengerName)
@@ -207,6 +211,7 @@ fun LookupScreen() {
 
                     else -> {
                         LazyColumn(
+                            state = summaryListState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)

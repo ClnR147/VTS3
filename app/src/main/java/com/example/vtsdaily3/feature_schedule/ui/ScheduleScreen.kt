@@ -69,17 +69,8 @@ import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
-import com.example.vtsdaily3.ui.template.VtsScreenTemplate
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material3.Surface
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
-
+import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
+import com.example.vtsdaily3.ui.theme.VtsGreen
 
 @Composable
 fun ScheduleScreen(
@@ -101,14 +92,14 @@ fun ScheduleScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 8.dp)
 
     ) {
         Text(
             text = "Schedule",
             modifier = Modifier
                 .fillMaxWidth()
-                    .padding(top = 30.dp, bottom = 8.dp),   // hardcoded to match template
+                    .padding(top = 29.dp, bottom = 20.dp),   // hardcoded to match template
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
@@ -455,8 +446,9 @@ fun ScheduleHeaderCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = LightGreenCardBackground
         ),
+        border = BorderStroke(.5.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         )
@@ -464,7 +456,7 @@ fun ScheduleHeaderCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp)
 
         ) {
             Row(
@@ -496,7 +488,7 @@ fun ScheduleHeaderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

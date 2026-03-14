@@ -55,7 +55,7 @@ fun LookupScreen() {
     var menuExpanded by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
     var uiState by remember { mutableStateOf(LookupUiState()) }
-
+    var lastOpenedPassengerName by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val summaryListState = rememberLazyListState()
 
@@ -122,7 +122,6 @@ fun LookupScreen() {
                 }
             }
     }
-
 
     val selectedSummary = remember(filteredSummaries, selectedPassengerName, uiState.summaries) {
         val source = if (selectedPassengerName == null) emptyList() else uiState.summaries
@@ -192,7 +191,9 @@ fun LookupScreen() {
     ) {
         HeaderDetailHost(
             selectedItem = selectedPassengerName,
-            onSelectItem = { selectedPassengerName = it },
+            onSelectItem = {
+                selectedPassengerName = it
+            },
             onClearSelection = { selectedPassengerName = null },
 
             summary = { onSelect ->
@@ -231,7 +232,6 @@ fun LookupScreen() {
             },
 
             detail = { _, onBack ->
-
                 if (selectedDetail == null) {
                     LookupEmptyState(message = "Passenger not found.")
                 } else {

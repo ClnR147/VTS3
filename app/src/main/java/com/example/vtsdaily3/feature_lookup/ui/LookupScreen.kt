@@ -50,7 +50,6 @@ import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
 @Composable
 fun LookupScreen() {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedPassengerKey by remember { mutableStateOf<String?>(null) }
     var selectedPassengerName by remember { mutableStateOf<String?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
@@ -87,7 +86,7 @@ fun LookupScreen() {
                 val rows = importLookupCsv(input)
                 uiState.rows = rows
                 LookupStore.save(context, rows)
-                selectedPassengerKey = null
+                selectedPassengerName = null
                 searchQuery = ""
                 saveLookupUri(context, uri)
             }
@@ -121,9 +120,9 @@ fun LookupScreen() {
     }
 
 
-    val selectedSummary = remember(filteredSummaries, selectedPassengerKey, uiState.summaries) {
-        val source = if (selectedPassengerKey == null) emptyList() else uiState.summaries
-        source.firstOrNull { it.passenger == selectedPassengerKey }
+    val selectedSummary = remember(filteredSummaries, selectedPassengerName, uiState.summaries) {
+        val source = if (selectedPassengerName == null) emptyList() else uiState.summaries
+        source.firstOrNull { it.passenger == selectedPassengerName }
     }
 
     VtsScreenTemplate(
@@ -188,9 +187,9 @@ fun LookupScreen() {
         }
     ) {
         HeaderDetailHost(
-            selectedItem = selectedPassengerKey,
-            onSelectItem = { selectedPassengerKey = it },
-            onClearSelection = { selectedPassengerKey = null },
+            selectedItem = selectedPassengerName,
+            onSelectItem = { selectedPassengerName = it },
+            onClearSelection = { selectedPassengerName = null },
 
             summary = { onSelect ->
                 when {

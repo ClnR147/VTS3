@@ -1,6 +1,8 @@
 package com.example.vtsdaily3.feature_lookup.domain
 
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class LookupSummary(
     val passenger: String,
@@ -23,6 +25,26 @@ data class LookupPassengerDetail(
     val dayGroups: List<LookupTripDayGroup> = emptyList()
 )
 
+private fun parseLookupDriveDate(raw: String?): LocalDate? {
+    val value = raw?.trim().orEmpty()
+    if (value.isBlank()) return null
+
+    val patterns = listOf(
+        DateTimeFormatter.ofPattern("M/d/yyyy"),
+        DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+        DateTimeFormatter.ofPattern("M/d/yy"),
+        DateTimeFormatter.ofPattern("MM/dd/yy")
+    )
+
+    for (formatter in patterns) {
+        try {
+            return LocalDate.parse(value, formatter)
+        } catch (_: Exception) {
+        }
+    }
+
+    return null
+}
 fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
     return rows
         .mapNotNull { row ->
@@ -69,7 +91,10 @@ fun buildLookupPassengerDetail(
                 }
             )
         }
-        .sortedBy { it.driveDate ?: "" }
+        .sortedBy { group ->
+            parseLookupDriveDate(group.driveDate) ?: LocalDate.MAX
+        }
+
 
     return LookupPassengerDetail(
         passenger = targetName,

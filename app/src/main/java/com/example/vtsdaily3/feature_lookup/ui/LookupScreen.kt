@@ -26,9 +26,11 @@ import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -57,7 +59,6 @@ fun LookupScreen() {
     var uiState by remember { mutableStateOf(LookupUiState()) }
     var lastOpenedPassengerName by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    val summaryListState = rememberLazyListState()
 
     val selectedDetail = remember(uiState.rows, selectedPassengerName) {
         selectedPassengerName?.let { passengerName ->
@@ -99,12 +100,19 @@ fun LookupScreen() {
         }
     }
 
-    val filteredSummaries = remember(uiState.summaries, searchQuery, sortMode) {
+    val summaryListState = rememberSaveable(saver = LazyListState.Saver) {
+        LazyListState(0, 0)
+    }
+
+    val queryText = remember(searchQuery) {
+        searchQuery.trim()
+    }
+
+    val filteredSummaries = remember(uiState.summaries, queryText, sortMode) {
         uiState.summaries
             .filter { summary ->
-                val q = searchQuery.trim().lowercase(Locale.getDefault())
-                q.isBlank() ||
-                        summary.passenger.lowercase(Locale.getDefault()).contains(q)
+                queryText.isBlank() ||
+                        summary.passenger.contains(queryText, ignoreCase = true)
             }
             .let { list ->
                 when (sortMode) {
@@ -123,10 +131,30 @@ fun LookupScreen() {
             }
     }
 
-    val selectedSummary = remember(filteredSummaries, selectedPassengerName, uiState.summaries) {
-        val source = if (selectedPassengerName == null) emptyList() else uiState.summaries
-        source.firstOrNull { it.passenger == selectedPassengerName }
+    val selectedSummary = remember(selectedPassengerName, uiState.summaries) {
+        selectedPassengerName?.let { name ->
+            uiState.summaries.firstOrNull { it.passenger == name }
+        }
     }
+
+    LaunchedEffect(queryText) {
+        if (selectedPassengerName == null) {
+            summaryListState.scrollToItem(0)
+        }
+    }
+
+    LaunchedEffect(sortMode) {
+        if (selectedPassengerName == null) {
+            summaryListState.scrollToItem(0)
+        }
+    }
+
+    LaunchedEffect(selectedPassengerName) {
+        if (selectedPassengerName == null) {
+            summaryListState.scrollToItem(0)
+        }
+    }
+
 
     VtsScreenTemplate(
 
@@ -212,10 +240,7 @@ fun LookupScreen() {
 
                     else -> {
                         LazyColumn(
-                            state = summaryListState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            state = summaryListState
                         ) {
                             items(
                                 items = filteredSummaries,

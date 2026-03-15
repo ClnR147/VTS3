@@ -34,55 +34,77 @@ fun PassengerNotesScreen(
 ) {
     val context = LocalContext.current
 
+    val rawPassengerName = trip.name.trim()
+    val passengerName = normalizePassengerNameForNotes(rawPassengerName)
+        .split(" ")
+        .joinToString(" ") { part ->
+            part.replaceFirstChar { ch ->
+                if (ch.isLowerCase()) ch.titlecase() else ch.toString()
+            }
+        }
+
     val puAddress = trip.fromAddress.trim()
     val doAddress = trip.toAddress.trim()
 
-    val puKey = remember(trip.name, puAddress) {
-        buildPassengerResidenceKey(trip.name, puAddress)
+    val puKey = remember(rawPassengerName, puAddress) {
+        buildPassengerResidenceKey(rawPassengerName, puAddress)
     }
-    val doKey = remember(trip.name, doAddress) {
-        buildPassengerResidenceKey(trip.name, doAddress)
+    val doKey = remember(rawPassengerName, doAddress) {
+        buildPassengerResidenceKey(rawPassengerName, doAddress)
     }
 
-    val existingPu = remember(trip.name, puAddress) {
-        PassengerNotesStore.get(context, puKey)
+
+    val existingPu = remember(passengerName, puAddress) {
+        if (puAddress.isBlank()) null else PassengerNotesStore.get(context, puKey)
     }
-    val existingDo = remember(trip.name, doAddress) {
-        PassengerNotesStore.get(context, doKey)
+    val existingDo = remember(passengerName, doAddress) {
+        if (doAddress.isBlank()) null else PassengerNotesStore.get(context, doKey)
     }
 
     val initialSide = when {
         existingPu != null -> ResidenceSide.PU
         existingDo != null -> ResidenceSide.DO
-        else -> ResidenceSide.PU
+        else -> if (doAddress.isBlank()) ResidenceSide.PU else ResidenceSide.PU
     }
 
-    val initialRecord = existingPu ?: existingDo
+    val initialRecord = when (initialSide) {
+        ResidenceSide.PU -> existingPu
+        ResidenceSide.DO -> existingDo
+    }
 
-    var selectedSide by remember(trip.name, puAddress, doAddress) {
+    var selectedSide by remember(passengerName, puAddress, doAddress) {
         mutableStateOf(initialSide)
     }
-    var gateCode by remember(trip.name, puAddress, doAddress) {
+    var gateCode by remember(passengerName, puAddress, doAddress) {
         mutableStateOf(initialRecord?.gateCode ?: "")
     }
-    var noteText by remember(trip.name, puAddress, doAddress) {
+    var noteText by remember(passengerName, puAddress, doAddress) {
         mutableStateOf(initialRecord?.noteText ?: "")
     }
 
-    LaunchedEffect(selectedSide) {
+    LaunchedEffect(selectedSide, passengerName, puAddress, doAddress) {
         val selectedKey = when (selectedSide) {
             ResidenceSide.PU -> puKey
             ResidenceSide.DO -> doKey
         }
 
-        val selectedRecord = PassengerNotesStore.get(context, selectedKey)
+        val selectedAddress = when (selectedSide) {
+            ResidenceSide.PU -> puAddress
+            ResidenceSide.DO -> doAddress
+        }
 
-        if (selectedRecord != null) {
-            gateCode = selectedRecord.gateCode
-            noteText = selectedRecord.noteText
-        } else {
+        if (selectedAddress.isBlank()) {
             gateCode = ""
             noteText = ""
+        } else {
+            val selectedRecord = PassengerNotesStore.get(context, selectedKey)
+            if (selectedRecord != null) {
+                gateCode = selectedRecord.gateCode
+                noteText = selectedRecord.noteText
+            } else {
+                gateCode = ""
+                noteText = ""
+            }
         }
     }
 
@@ -92,7 +114,7 @@ fun PassengerNotesScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = trip.name,
+            text = passengerName,
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -186,18 +208,24 @@ fun PassengerNotesScreen(
                         ResidenceSide.DO -> doAddress
                     }
 
-                    val note = PassengerResidenceNote(
-                        recordKey = buildPassengerResidenceKey(trip.name, selectedAddress),
-                        passengerKey = normalizePassengerNameForNotes(trip.name),
-                        displayPassengerName = trip.name,
-                        residenceAddressKey = normalizeAddressForNotes(selectedAddress),
-                        displayResidenceAddress = selectedAddress,
-                        residenceSide = selectedSide,
-                        gateCode = gateCode,
-                        noteText = noteText
-                    )
+                    if (selectedAddress.isNotBlank()) {
+                        val note = PassengerResidenceNote(
+                            recordKey = buildPassengerResidenceKey(
+                                passengerName = rawPassengerName,
+                                residenceAddress = selectedAddress
+                            ),
+                            passengerKey = normalizePassengerNameForNotes(rawPassengerName),
+                            displayPassengerName = passengerName,
+                            residenceAddressKey = normalizeAddressForNotes(selectedAddress),
+                            displayResidenceAddress = selectedAddress,
+                            residenceSide = selectedSide,
+                            gateCode = gateCode,
+                            noteText = noteText
+                        )
 
-                    PassengerNotesStore.put(context, note)
+                        PassengerNotesStore.put(context, note)
+                    }
+
                     onClose()
                 }
             ) {

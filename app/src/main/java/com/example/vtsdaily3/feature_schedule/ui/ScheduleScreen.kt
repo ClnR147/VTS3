@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -65,12 +64,14 @@ import com.example.vtsdaily3.ui.theme.FromGrey
 import com.example.vtsdaily3.ui.theme.RemovedColor
 import com.example.vtsdaily3.ui.theme.VtsError
 import com.example.vtsdaily3.ui.theme.VtsWarning
-import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
+import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
+import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
+
 
 @Composable
 fun ScheduleScreen(
@@ -89,20 +90,28 @@ fun ScheduleScreen(
             DateTimeFormatter.ofPattern("EEE, MMM d, yyyy")
         )
     }
+
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
+
+    notesTrip?.let { selectedTrip ->
+        PassengerNotesScreen(
+            trip = selectedTrip,
+            onClose = { notesTrip = null }
+        )
+        return
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 8.dp)
-
     ) {
         Text(
             text = "Schedule",
             modifier = Modifier
                 .fillMaxWidth()
-                    .padding(top = 29.dp, bottom = 20.dp),   // hardcoded to match template
+                .padding(top = 29.dp, bottom = 20.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
@@ -174,14 +183,13 @@ fun ScheduleScreen(
                                 notesTrip = selectedTrip
                             },
                         )
-
                     }
                 }
-
             }
         }
     }
 }
+
 
 @Composable
 private fun TripCard(

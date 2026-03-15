@@ -344,11 +344,14 @@ private fun TripCard(
                         )
                     }
 
-
                     IconButton(
                         onClick = {
-                            onLookupPassenger(trip.name)
-                        },
+                            val normalizedName = normalizeLookupName(trip.name)
+                            if (normalizedName.isNotBlank()) {
+                                onLookupPassenger(normalizedName)
+                            }
+                        }
+                        ,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -363,6 +366,12 @@ private fun TripCard(
             }
         }
     }
+}
+
+private fun normalizeLookupName(raw: String): String {
+    return raw
+        .takeWhile { it != '+' && it != '(' }
+        .trim()
 }
 
 @Composable

@@ -218,11 +218,15 @@ fun LookupScreen(
             ) {
                 VtsSearchField(
                     value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    onValueChange = {
+                        searchQuery = it
+                        selectedPassengerName = null
+                    },
                     placeholder = "Search passengers"
                 )
             }
-        },
+        }
+        ,
 
         sortBar = {
             LookupSortBar(

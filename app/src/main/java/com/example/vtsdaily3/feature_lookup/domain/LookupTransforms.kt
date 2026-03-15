@@ -48,8 +48,9 @@ private fun parseLookupDriveDate(raw: String?): LocalDate? {
 fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
     return rows
         .mapNotNull { row ->
-            val passenger = row.passenger?.trim()
-            if (passenger.isNullOrBlank()) null else passenger
+            row.passenger
+                ?.let(::lookupDisplayName)
+                ?.takeIf { it.isNotBlank() }
         }
         .groupBy { it }
         .map { (passenger, passengerRows) ->
@@ -61,14 +62,22 @@ fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
         .sortedBy { it.passenger }
 }
 
+
+private fun lookupDisplayName(raw: String): String {
+    return raw
+        .takeWhile { it != '+' && it != '(' }
+        .trim()
+}
+
 fun buildLookupPassengerDetail(
     rows: List<LookupRow>,
     passengerName: String
 ): LookupPassengerDetail? {
-    val targetName = passengerName.trim()
+    val targetName = lookupDisplayName(passengerName)
 
     val matches = rows.filter { row ->
-        row.passenger?.trim() == targetName
+        val rowName = row.passenger?.let(::lookupDisplayName).orEmpty()
+        rowName == targetName
     }
 
     if (matches.isEmpty()) return null
@@ -94,7 +103,6 @@ fun buildLookupPassengerDetail(
         .sortedBy { group ->
             parseLookupDriveDate(group.driveDate) ?: LocalDate.MAX
         }
-
 
     return LookupPassengerDetail(
         passenger = targetName,

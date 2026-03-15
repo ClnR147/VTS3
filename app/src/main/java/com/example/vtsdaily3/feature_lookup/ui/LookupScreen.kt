@@ -26,6 +26,8 @@ import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,6 +51,7 @@ import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.util.VtsDateFormat
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
+import com.example.vtsdaily3.ui.template.VtsThinDivider
 
 @Composable
 fun LookupScreen(
@@ -304,13 +307,12 @@ private fun LookupSummaryCard(
         )
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LookupDetailScreen(
     detail: LookupPassengerDetail,
     onBack: () -> Unit,
 ) {
-
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -321,12 +323,20 @@ private fun LookupDetailScreen(
             contentPadding = PaddingValues(bottom = VtsSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
         ) {
-            item {
-                VtsScreenHeader(
-                    title = detail.passenger,
-                    subtitle = detail.phone,
-                    showDivider = false
-                )
+            stickyHeader {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(bottom = VtsSpacing.xs)
+                ) {
+                    VtsThinDivider()
+                    VtsScreenHeader(
+                        title = detail.passenger,
+                        subtitle = detail.phone,
+                        showDivider = false
+                    )
+                }
             }
 
             items(detail.dayGroups) { dayGroup ->
@@ -350,6 +360,7 @@ private fun LookupDetailScreen(
         )
     }
 }
+
 
 @Composable
 private fun LookupTripDateCard(

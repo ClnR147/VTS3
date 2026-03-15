@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
@@ -88,6 +89,8 @@ fun ScheduleScreen(
             DateTimeFormatter.ofPattern("EEE, MMM d, yyyy")
         )
     }
+    var notesTrip by remember { mutableStateOf<Trip?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -166,7 +169,10 @@ fun ScheduleScreen(
                                     }
                                 }
                             },
-                            onLookupPassenger = onLookupPassenger
+                            onLookupPassenger = onLookupPassenger,
+                            onPassengerNotes = { selectedTrip ->
+                                notesTrip = selectedTrip
+                            },
                         )
 
                     }
@@ -183,6 +189,7 @@ private fun TripCard(
     viewMode: TripViewMode,
     onTripActionSelected: (TripMenuAction) -> Unit,
     onLookupPassenger: (String) -> Unit,
+    onPassengerNotes: (Trip) -> Unit,
     modifier: Modifier = Modifier
 )
  {
@@ -346,12 +353,8 @@ private fun TripCard(
 
                     IconButton(
                         onClick = {
-                            val normalizedName = normalizeLookupName(trip.name)
-                            if (normalizedName.isNotBlank()) {
-                                onLookupPassenger(normalizedName)
-                            }
-                        }
-                        ,
+                            onLookupPassenger(trip.name)
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -362,7 +365,21 @@ private fun TripCard(
                         )
                     }
 
+                    IconButton(
+                        onClick = {
+                            onPassengerNotes(trip)
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.EditNote,
+                            contentDescription = "Passenger Notes",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
+
             }
         }
     }

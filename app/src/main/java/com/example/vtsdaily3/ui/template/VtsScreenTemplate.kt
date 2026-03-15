@@ -52,13 +52,16 @@ fun VtsScreenTemplate(
             )
 
             Box(
-                modifier = Modifier.size(VtsSpacing.headerButtonSize),
+                modifier = Modifier
+                    .size(VtsSpacing.headerButtonSize)
+                    .offset(y = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (showControls) {
                     dropdown?.invoke()
                 }
             }
+
         }
 
         Box(

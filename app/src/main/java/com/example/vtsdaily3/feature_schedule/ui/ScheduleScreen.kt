@@ -7,7 +7,6 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Button
@@ -33,7 +33,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +80,8 @@ fun ScheduleScreen(
     onReinstateTrip: (TripId) -> Unit,
     onRefresh: () -> Unit,
     onPreviousDate: () -> Unit,
-    onNextDate: () -> Unit
+    onNextDate: () -> Unit,
+    onLookupPassenger: (String) -> Unit
 ) {
     val formattedSelectedDate = remember(uiState.selectedDate) {
         uiState.selectedDate.format(
@@ -165,10 +165,13 @@ fun ScheduleScreen(
                                         onReinstateTrip(trip.id)
                                     }
                                 }
-                            }
+                            },
+                            onLookupPassenger = onLookupPassenger
                         )
+
                     }
                 }
+
             }
         }
     }
@@ -179,8 +182,10 @@ private fun TripCard(
     trip: Trip,
     viewMode: TripViewMode,
     onTripActionSelected: (TripMenuAction) -> Unit,
+    onLookupPassenger: (String) -> Unit,
     modifier: Modifier = Modifier
-) {
+)
+ {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     val toAddress = trip.toAddress.trim()
@@ -326,40 +331,34 @@ private fun TripCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (trip.phone.isNotBlank()) {
-                        IconButton(
-                            onClick = {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_DIAL, "tel:${trip.phone.trim()}".toUri())
-                                )
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Phone,
-                                contentDescription = "Call Passenger",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
                     IconButton(
-                        onClick = {
-                            val navAddress = toAddress.ifBlank { trip.fromAddress }
-                            if (navAddress.isNotBlank()) {
-                                launchWaze(context, navAddress)
-                            }
-                        },
+                        onClick = { /* clinic call will be implemented later */ },
+                        enabled = false,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.LocationOn,
-                            contentDescription = "Navigate",
+                            imageVector = Icons.Outlined.Phone,
+                            contentDescription = "Call Clinic (future)",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
+
+
+                    IconButton(
+                        onClick = {
+                            onLookupPassenger(trip.name)
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.PersonSearch,
+                            contentDescription = "Lookup Passenger",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
                 }
             }
         }

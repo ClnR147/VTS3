@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,6 +16,10 @@ import com.example.vtsdaily3.feature_lookup.ui.LookupScreen
 //import com.example.vtsdaily3.feature_contacts.ui.ContactScreen
 //import com.example.vtsdaily3.feature_clinics.ui.ClinicScreenRoute
 import com.example.vtsdaily3.ui.navigation.AppDestination
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
+
 
 @Composable
 fun AppNavHost(
@@ -21,17 +27,35 @@ fun AppNavHost(
     treeUri: Uri,
     navController: NavHostController
 ) {
+    var pendingLookupPassenger by rememberSaveable { mutableStateOf<String?>(null) }
+
     NavHost(
         navController = navController,
         startDestination = AppDestination.Schedule.route,
         modifier = Modifier.padding(padding)
     ) {
         composable(AppDestination.Schedule.route) {
-            ScheduleRoute()
+            ScheduleRoute(
+                onLookupPassenger = { passengerName ->
+                    pendingLookupPassenger = passengerName
+                    navController.navigate(AppDestination.Lookup.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
         composable(AppDestination.Lookup.route) {
-            LookupScreen()
+            LookupScreen(
+                initialPassengerName = pendingLookupPassenger,
+                onInitialPassengerNameConsumed = {
+                    pendingLookupPassenger = null
+                }
+            )
         }
 
         composable(AppDestination.Drivers.route) {
@@ -46,7 +70,9 @@ fun AppNavHost(
             ClinicScreenRoute(treeUri = treeUri)
         }
     }
+
 }
+
 
 @Composable
 fun ClinicScreenRoute(treeUri: Uri) {

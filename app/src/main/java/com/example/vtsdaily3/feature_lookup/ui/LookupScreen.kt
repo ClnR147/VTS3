@@ -51,7 +51,10 @@ import com.example.vtsdaily3.util.VtsDateFormat
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
 
 @Composable
-fun LookupScreen() {
+fun LookupScreen(
+    initialPassengerName: String? = null,
+    onInitialPassengerNameConsumed: () -> Unit = {}
+) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedPassengerName by remember { mutableStateOf<String?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
@@ -60,11 +63,22 @@ fun LookupScreen() {
     var lastOpenedPassengerName by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
+    LaunchedEffect(initialPassengerName) {
+        initialPassengerName
+            ?.takeIf { it.isNotBlank() }
+            ?.let { passengerName ->
+                searchQuery = passengerName
+                selectedPassengerName = passengerName
+                onInitialPassengerNameConsumed()
+            }
+    }
+
     val selectedDetail = remember(uiState.rows, selectedPassengerName) {
         selectedPassengerName?.let { passengerName ->
             buildLookupPassengerDetail(uiState.rows, passengerName)
         }
     }
+
     LaunchedEffect(Unit) {
         uiState = buildLookupUiState(LookupStore.load(context))
     }
@@ -99,6 +113,7 @@ fun LookupScreen() {
             Log.e("LookupImport", "Import failed", e)
         }
     }
+
 
     val summaryListState = rememberSaveable(saver = LazyListState.Saver) {
         LazyListState(0, 0)

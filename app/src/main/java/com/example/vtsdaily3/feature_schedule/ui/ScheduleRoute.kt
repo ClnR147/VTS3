@@ -26,7 +26,10 @@ import com.example.vtsdaily3.data.ScheduleFolderPrefs
 import com.example.vtsdaily3.feature_schedule.di.ScheduleModule
 
 @Composable
-fun ScheduleRoute() {
+fun ScheduleRoute(
+    onLookupPassenger: (String) -> Unit
+) {
+
     val context = LocalContext.current
 
     var savedFolderUri: Uri? by remember {
@@ -83,7 +86,8 @@ fun ScheduleRoute() {
                 onReinstateTrip = viewModel::reinstateTrip,
                 onRefresh = viewModel::refreshCurrentDate,
                 onPreviousDate = viewModel::goToPreviousAvailableDate,
-                onNextDate = viewModel::goToNextAvailableDate
+                onNextDate = viewModel::goToNextAvailableDate,
+                onLookupPassenger = onLookupPassenger
             )
         }
     }

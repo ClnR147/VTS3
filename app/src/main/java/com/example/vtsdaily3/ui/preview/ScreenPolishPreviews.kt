@@ -60,6 +60,8 @@ private fun ScheduleScreenPreview() {
         onReinstateTrip = {},
         onRefresh = {},
         onPreviousDate = {},
-        onNextDate = {}
+        onNextDate = {},
+        onLookupPassenger = {}
+
     )
 }

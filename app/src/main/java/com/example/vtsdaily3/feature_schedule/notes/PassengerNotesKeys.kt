@@ -28,3 +28,14 @@ fun buildPassengerResidenceKey(
     val addressKey = normalizeAddressForNotes(residenceAddress)
     return "$passengerKey||$addressKey"
 }
+
+fun displayPassengerNameForNotes(raw: String): String {
+    return normalizePassengerNameForNotes(raw)
+        .split(" ")
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { part ->
+            part.replaceFirstChar { ch ->
+                if (ch.isLowerCase()) ch.titlecase() else ch.toString()
+            }
+        }
+}

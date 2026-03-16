@@ -282,6 +282,7 @@ fun LookupScreen(
                 if (selectedDetail == null) {
                     LookupEmptyState(message = "Passenger not found.")
                 } else {
+                    VtsThinDivider()
                     LookupDetailScreen(
                         detail = selectedDetail,
                         onBack = onBack
@@ -330,7 +331,6 @@ private fun LookupDetailScreen(
                         .background(MaterialTheme.colorScheme.background)
                         .padding(bottom = VtsSpacing.xs)
                 ) {
-                    VtsThinDivider()
                     VtsScreenHeader(
                         title = detail.passenger,
                         subtitle = detail.phone,

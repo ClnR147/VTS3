@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.model.Trip
+import com.example.vtsdaily3.feature_schedule.notes.displayPassengerNameForNotes
+
 
 @Composable
 fun PassengerNotesScreen(
@@ -35,13 +37,7 @@ fun PassengerNotesScreen(
     val context = LocalContext.current
 
     val rawPassengerName = trip.name.trim()
-    val passengerName = normalizePassengerNameForNotes(rawPassengerName)
-        .split(" ")
-        .joinToString(" ") { part ->
-            part.replaceFirstChar { ch ->
-                if (ch.isLowerCase()) ch.titlecase() else ch.toString()
-            }
-        }
+    val passengerName = displayPassengerNameForNotes(rawPassengerName)
 
     val puAddress = trip.fromAddress.trim()
     val doAddress = trip.toAddress.trim()

@@ -18,7 +18,7 @@ import com.example.vtsdaily3.feature_lookup.ui.LookupScreen
 import com.example.vtsdaily3.ui.navigation.AppDestination
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
+import com.example.vtsdaily3.feature_drivers.ui.DriversScreen
 
 
 @Composable
@@ -86,5 +86,5 @@ fun ContactScreen() {
 
 @Composable
 fun DriverScreenRoute(treeUri: Uri) {
-    TODO("Not yet implemented")
+    DriversScreen()
 }

@@ -33,6 +33,13 @@ import com.example.vtsdaily3.feature_drivers.data.DriverContact
 import com.example.vtsdaily3.feature_drivers.data.DriverStore
 import com.example.vtsdaily3.feature_drivers.data.DriversFolderPrefs
 import com.example.vtsdaily3.ui.template.VtsScreenTemplate
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 @Composable
 fun DriversScreen() {
@@ -84,7 +91,10 @@ fun DriversScreen() {
     if (selectedDriver != null) {
         DriverDetailScreen(
             driver = selectedDriver!!,
-            onBack = { selectedDriver = null }
+            onBack = { selectedDriver = null },
+            onCallDriver = { phone ->
+                launchDialer(context, phone)
+            }
         )
         return
     }
@@ -243,7 +253,8 @@ private fun DriverRowCard(
 @Composable
 private fun DriverDetailScreen(
     driver: DriverContact,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onCallDriver: (String) -> Unit
 ) {
     VtsScreenTemplate(
         title = "Drivers",
@@ -264,10 +275,24 @@ private fun DriverDetailScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = driver.name,
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = driver.name,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        IconButton(
+                            onClick = { onCallDriver(driver.phone) }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Call,
+                                contentDescription = "Call driver"
+                            )
+                        }
+                    }
 
                     ThinDriverDivider()
 
@@ -306,6 +331,24 @@ private fun DriverLabelValueRow(
     }
 }
 
+private fun launchDialer(context: Context, phone: String) {
+    val cleaned = phone.trim()
+
+    if (cleaned.isBlank()) {
+        Toast.makeText(context, "No phone number available", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val intent = Intent(Intent.ACTION_DIAL).apply {
+        data = Uri.parse("tel:$cleaned")
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(context, "No dialer app found", Toast.LENGTH_SHORT).show()
+    }
+}
 @Composable
 private fun ThinDriverDivider() {
     HorizontalDivider(

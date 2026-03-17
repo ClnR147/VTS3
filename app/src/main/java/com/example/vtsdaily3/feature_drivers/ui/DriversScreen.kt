@@ -38,8 +38,12 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 
 @Composable
 fun DriversScreen() {
@@ -140,7 +144,14 @@ private fun DriverSearchBar(
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        label = { Text("Search drivers") }
+        label = { Text("Search drivers") },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = VtsTextPrimary_Light,
+            unfocusedBorderColor = VtsTextPrimary_Light,
+            focusedLabelColor = VtsTextPrimary_Light,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            cursorColor = VtsTextPrimary_Light
+        )
     )
 }
 
@@ -153,7 +164,10 @@ private fun DriverSortBar(
         modifier = Modifier.padding(vertical = 4.dp)
     ) {
         TextButton(
-            onClick = { onSortSelected(DriverSortMode.NAME) }
+            onClick = { onSortSelected(DriverSortMode.NAME) },
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = VtsTextPrimary_Light
+            )
         ) {
             Text(
                 text = if (sortMode == DriverSortMode.NAME) "Name ✓" else "Name"
@@ -163,7 +177,10 @@ private fun DriverSortBar(
         Spacer(modifier = Modifier.width(8.dp))
 
         TextButton(
-            onClick = { onSortSelected(DriverSortMode.VAN) }
+            onClick = { onSortSelected(DriverSortMode.VAN) },
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = VtsTextPrimary_Light
+            )
         ) {
             Text(
                 text = if (sortMode == DriverSortMode.VAN) "Van ✓" else "Van"
@@ -193,7 +210,7 @@ private fun EmptyDriversState(
         Text(
             text = "Tap here to choose folder",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = VtsTextPrimary_Light,
             modifier = Modifier.clickable { onChooseFolder() }
         )
     }
@@ -224,7 +241,10 @@ private fun DriverRowCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -264,12 +284,20 @@ private fun DriverDetailScreen(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextButton(onClick = onBack) {
-                Text("Back")
+            TextButton(
+                onClick = onBack
+            ) {
+                Text(
+                    text = "Back",
+                    color = VtsTextPrimary_Light
+                )
             }
 
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -289,7 +317,8 @@ private fun DriverDetailScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Call,
-                                contentDescription = "Call driver"
+                                contentDescription = "Call driver",
+                                tint = VtsTextPrimary_Light
                             )
                         }
                     }

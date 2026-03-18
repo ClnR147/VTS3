@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.runtime.saveable)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.ui.tooling.preview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -85,6 +86,7 @@ dependencies {
     implementation(libs.apache.poi)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    debugImplementation(libs.androidx.ui.tooling)
 }
 
 val apkDropDir: File = file("C:/AutoSyncToPhone/PassengerSchedules")

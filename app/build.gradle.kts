@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.androidx.compose.runtime.saveable)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.runtime)
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -58,6 +58,8 @@ import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
+import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
+import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 
 @Composable
 fun DriversScreen() {
@@ -394,16 +396,9 @@ private fun DriverDetailScreen(
                 Text("Back")
             }
 
-            VtsCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = driver.name,
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-
+            VtsDirectoryDetailCard(
+                title = driver.name,
+                actions = {
                     Row {
                         IconButton(
                             onClick = { onCallDriver(driver.phone) }
@@ -436,9 +431,7 @@ private fun DriverDetailScreen(
                         }
                     }
                 }
-
-                ThinDriverDivider()
-
+            ) {
                 VtsInfoRow(
                     label = "Phone",
                     value = driver.phone

@@ -1,10 +1,7 @@
 package com.example.vtsdaily3.feature_drivers.ui
 
-import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -15,23 +12,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -46,22 +35,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_drivers.data.DriverContact
 import com.example.vtsdaily3.feature_drivers.data.DriverStore
 import com.example.vtsdaily3.feature_drivers.data.DriversFolderPrefs
-import com.example.vtsdaily3.ui.template.VtsScreenTemplate
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
-import androidx.core.net.toUri
-import com.example.vtsdaily3.ui.theme.Vts3DailyTheme
-import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
-import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
-import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 
 @Composable
@@ -94,10 +76,7 @@ fun DriversScreen() {
             drivers = updated
             DriverStore.save(context, updated)
         },
-        onChooseFolder = { folderPickerLauncher.launch(null) },
-        onCallDriver = { phone ->
-            launchDialer(context, phone)
-        }
+        onChooseFolder = { folderPickerLauncher.launch(null) }
     )
 }
 
@@ -112,8 +91,7 @@ fun DriversScreenPreviewContent(
         onDriversChange = { updated ->
             localDrivers = updated
         },
-        onChooseFolder = {},
-        onCallDriver = {}
+        onChooseFolder = {}
     )
 }
 
@@ -121,12 +99,11 @@ fun DriversScreenPreviewContent(
 private fun DriversScreenContent(
     drivers: List<DriverContact>,
     onDriversChange: (List<DriverContact>) -> Unit,
-    onChooseFolder: () -> Unit,
-    onCallDriver: (String) -> Unit
+    onChooseFolder: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(DriverSortMode.NAME) }
-    var selectedDriver by remember { mutableStateOf<DriverContact?>(null) }
+    var driverPendingDelete by remember { mutableStateOf<DriverContact?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingDriver by remember { mutableStateOf<DriverContact?>(null) }
@@ -169,36 +146,40 @@ private fun DriversScreenContent(
             title = "Edit Driver",
             initialDriver = editingDriver,
             onDismiss = { editingDriver = null },
+            onDelete = {
+                driverPendingDelete = editingDriver
+                showDeleteConfirm = true
+                editingDriver = null
+            },
             onSave = { editedDriver ->
                 val original = editingDriver ?: return@DriverEditDialog
                 val updated = drivers.map { existing ->
                     if (existing == original) editedDriver else existing
                 }
                 onDriversChange(updated)
-
-                if (selectedDriver == original) {
-                    selectedDriver = editedDriver
-                }
-
                 editingDriver = null
             }
         )
     }
 
-    if (showDeleteConfirm && selectedDriver != null) {
+    if (showDeleteConfirm && driverPendingDelete != null) {
         AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
+            onDismissRequest = {
+                showDeleteConfirm = false
+                driverPendingDelete = null
+            },
             title = { Text("Delete Driver") },
             text = {
-                Text("Delete ${selectedDriver!!.name}?")
+                Text("Delete ${driverPendingDelete!!.name}?")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val toDelete = selectedDriver ?: return@TextButton
-                        onDriversChange(drivers.filterNot { it == toDelete })
-                        selectedDriver = null
+                        val toDelete = driverPendingDelete ?: return@TextButton
+                        val updated = drivers.filterNot { it == toDelete }
+                        onDriversChange(updated)
                         showDeleteConfirm = false
+                        driverPendingDelete = null
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = VtsTextPrimary_Light
@@ -209,7 +190,10 @@ private fun DriversScreenContent(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showDeleteConfirm = false },
+                    onClick = {
+                        showDeleteConfirm = false
+                        driverPendingDelete = null
+                    },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = VtsTextPrimary_Light
                     )
@@ -222,8 +206,7 @@ private fun DriversScreenContent(
 
     VtsDirectoryScreenShell(
         title = "Drivers",
-        showingDetail = selectedDriver != null,
-        onBackFromDetail = { selectedDriver = null },
+        showingDetail = false,
         searchBar = {
             DriverSearchBar(
                 query = searchQuery,
@@ -273,24 +256,11 @@ private fun DriversScreenContent(
             DriversList(
                 drivers = filteredAndSortedDrivers,
                 onDriverClick = { driver ->
-                    selectedDriver = driver
+                    editingDriver = driver
                 }
             )
         },
-        detailContent = {
-            selectedDriver?.let { driver ->
-                DriverDetailContent(
-                    driver = driver,
-                    onCallDriver = onCallDriver,
-                    onEditDriver = {
-                        editingDriver = driver
-                    },
-                    onDeleteDriver = {
-                        showDeleteConfirm = true
-                    }
-                )
-            }
-        }
+        detailContent = {}
     )
 }
 
@@ -421,66 +391,12 @@ private fun DriverRowCard(
 }
 
 @Composable
-private fun DriverDetailContent(
-    driver: DriverContact,
-    onCallDriver: (String) -> Unit,
-    onEditDriver: () -> Unit,
-    onDeleteDriver: () -> Unit
-) {
-    VtsDirectoryDetailCard(
-        title = driver.name,
-        actions = {
-            Row {
-                IconButton(
-                    onClick = { onCallDriver(driver.phone) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Call,
-                        contentDescription = "Call driver",
-                        tint = VtsTextPrimary_Light
-                    )
-                }
-
-                IconButton(
-                    onClick = onEditDriver
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit driver",
-                        tint = VtsTextPrimary_Light
-                    )
-                }
-
-                IconButton(
-                    onClick = onDeleteDriver
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete driver",
-                        tint = VtsTextPrimary_Light
-                    )
-                }
-            }
-        }
-    ) {
-        VtsInfoRow(
-            label = "Phone",
-            value = driver.phone
-        )
-
-        VtsInfoRow(
-            label = "Van",
-            value = driver.vanNumber
-        )
-    }
-}
-
-@Composable
 private fun DriverEditDialog(
     title: String,
     initialDriver: DriverContact?,
     onDismiss: () -> Unit,
-    onSave: (DriverContact) -> Unit
+    onSave: (DriverContact) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var name by remember(initialDriver) { mutableStateOf(initialDriver?.name.orEmpty()) }
     var phone by remember(initialDriver) { mutableStateOf(initialDriver?.phone.orEmpty()) }
@@ -564,33 +480,27 @@ private fun DriverEditDialog(
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = VtsTextPrimary_Light
-                )
-            ) {
-                Text("Cancel")
+            Row {
+                if (onDelete != null) {
+                    TextButton(
+                        onClick = onDelete,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = VtsTextPrimary_Light
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                }
+
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = VtsTextPrimary_Light
+                    )
+                ) {
+                    Text("Cancel")
+                }
             }
         }
     )
-}
-
-private fun launchDialer(context: Context, phone: String) {
-    val cleaned = phone.trim()
-
-    if (cleaned.isBlank()) {
-        Toast.makeText(context, "No phone number available", Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    val intent = Intent(Intent.ACTION_DIAL).apply {
-        data = "tel:$cleaned".toUri()
-    }
-
-    try {
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        Toast.makeText(context, "No dialer app found", Toast.LENGTH_SHORT).show()
-    }
 }

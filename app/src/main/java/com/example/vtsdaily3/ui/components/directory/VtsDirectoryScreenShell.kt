@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 
@@ -24,13 +24,9 @@ fun VtsDirectoryScreenShell(
     showingDetail: Boolean,
     onBackFromDetail: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-
-    // optional top controls
     searchBar: (@Composable () -> Unit)? = null,
     sortBar: (@Composable () -> Unit)? = null,
     actionSlot: (@Composable () -> Unit)? = null,
-
-    // list state
     isListEmpty: Boolean,
     emptyState: @Composable () -> Unit = {
         Box(
@@ -46,8 +42,6 @@ fun VtsDirectoryScreenShell(
             )
         }
     },
-
-    // content
     listContent: @Composable () -> Unit,
     detailContent: @Composable () -> Unit
 ) {
@@ -65,16 +59,10 @@ fun VtsDirectoryScreenShell(
 
         if (showingDetail) {
             if (onBackFromDetail != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = VtsSpacing.sm),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    TextButton(onClick = onBackFromDetail) {
-                        Text("Back")
-                    }
-                }
+                VtsBackButton(
+                    onClick = onBackFromDetail,
+                    modifier = Modifier.padding(bottom = VtsSpacing.sm)
+                )
             }
 
             detailContent()
@@ -91,27 +79,36 @@ fun VtsDirectoryScreenShell(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (sortBar != null) {
-                        Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
                             sortBar()
                         }
                     }
 
                     if (actionSlot != null) {
-                        actionSlot()
+                        Box {
+                            actionSlot()
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(VtsSpacing.sm))
+                Spacer(modifier = Modifier.height(VtsSpacing.md))
             }
 
             VtsThinDivider()
 
             Spacer(modifier = Modifier.height(VtsSpacing.sm))
 
-            if (isListEmpty) {
-                emptyState()
-            } else {
-                listContent()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                if (isListEmpty) {
+                    emptyState()
+                } else {
+                    listContent()
+                }
             }
         }
     }

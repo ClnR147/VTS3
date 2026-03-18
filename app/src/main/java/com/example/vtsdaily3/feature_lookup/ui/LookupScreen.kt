@@ -18,18 +18,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.importLookupCsv
-import com.example.vtsdaily3.ui.template.HeaderDetailHost
-import com.example.vtsdaily3.ui.template.VtsScreenTemplate
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import java.time.LocalDate
 import java.util.Locale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,7 +41,6 @@ import com.example.vtsdaily3.feature_lookup.domain.LookupSummary
 import com.example.vtsdaily3.feature_lookup.domain.LookupTripDetail
 import com.example.vtsdaily3.feature_lookup.domain.buildLookupPassengerDetail
 import com.example.vtsdaily3.feature_lookup.ui.state.buildLookupUiState
-import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
@@ -51,36 +49,17 @@ import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.util.VtsDateFormat
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
+import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.template.VtsThinDivider
 
+@RequiresApi(Build.VERSION_CODES.KITKAT)
 @Composable
 fun LookupScreen(
     initialPassengerName: String? = null,
     onInitialPassengerNameConsumed: () -> Unit = {}
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedPassengerName by remember { mutableStateOf<String?>(null) }
-    var menuExpanded by remember { mutableStateOf(false) }
-    var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
-    var uiState by remember { mutableStateOf(LookupUiState()) }
-    var lastOpenedPassengerName by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-
-    LaunchedEffect(initialPassengerName) {
-        initialPassengerName
-            ?.takeIf { it.isNotBlank() }
-            ?.let { passengerName ->
-                searchQuery = passengerName
-                selectedPassengerName = passengerName
-                onInitialPassengerNameConsumed()
-            }
-    }
-
-    val selectedDetail = remember(uiState.rows, selectedPassengerName) {
-        selectedPassengerName?.let { passengerName ->
-            buildLookupPassengerDetail(uiState.rows, passengerName)
-        }
-    }
+    var uiState by remember { mutableStateOf(LookupUiState()) }
 
     LaunchedEffect(Unit) {
         uiState = buildLookupUiState(LookupStore.load(context))
@@ -106,10 +85,8 @@ fun LookupScreen(
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 val rows = importLookupCsv(input)
-                uiState.rows = rows
+                uiState = buildLookupUiState(rows)
                 LookupStore.save(context, rows)
-                selectedPassengerName = null
-                searchQuery = ""
                 saveLookupUri(context, uri)
             }
         } catch (e: Exception) {
@@ -117,9 +94,40 @@ fun LookupScreen(
         }
     }
 
+    LookupScreenContent(
+        uiState = uiState,
+        onImportClick = {
+            importLauncher.launch(arrayOf("text/*", "*/*"))
+        },
+        initialPassengerName = initialPassengerName,
+        onInitialPassengerNameConsumed = onInitialPassengerNameConsumed
+    )
+}
+
+@Composable
+private fun LookupScreenContent(
+    uiState: LookupUiState,
+    onImportClick: () -> Unit,
+    initialPassengerName: String? = null,
+    onInitialPassengerNameConsumed: () -> Unit = {}
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedPassengerName by remember { mutableStateOf<String?>(null) }
+    var menuExpanded by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
 
     val summaryListState = rememberSaveable(saver = LazyListState.Saver) {
         LazyListState(0, 0)
+    }
+
+    LaunchedEffect(initialPassengerName) {
+        initialPassengerName
+            ?.takeIf { it.isNotBlank() }
+            ?.let { passengerName ->
+                searchQuery = passengerName
+                selectedPassengerName = passengerName
+                onInitialPassengerNameConsumed()
+            }
     }
 
     val queryText = remember(searchQuery) {
@@ -149,9 +157,9 @@ fun LookupScreen(
             }
     }
 
-    val selectedSummary = remember(selectedPassengerName, uiState.summaries) {
-        selectedPassengerName?.let { name ->
-            uiState.summaries.firstOrNull { it.passenger == name }
+    val selectedDetail = remember(uiState.rows, selectedPassengerName) {
+        selectedPassengerName?.let { passengerName ->
+            buildLookupPassengerDetail(uiState.rows, passengerName)
         }
     }
 
@@ -173,44 +181,10 @@ fun LookupScreen(
         }
     }
 
-
-    VtsScreenTemplate(
-
+    VtsDirectoryScreenShell(
         title = "Passenger Lookup",
-        showControls = selectedSummary == null,
-
-        dropdown = {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Menu"
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Import") },
-                        onClick = {
-                            menuExpanded = false
-                            importLauncher.launch(arrayOf("text/*", "*/*"))
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Save") },
-                        onClick = {
-                            menuExpanded = false
-                            // TODO: wire save here if needed
-                        }
-                    )
-                }
-            }
-        },
-
+        showingDetail = selectedPassengerName != null,
+        onBackFromDetail = { selectedPassengerName = null },
         searchBar = {
             Box(
                 modifier = Modifier.padding(
@@ -228,69 +202,77 @@ fun LookupScreen(
                     placeholder = "Search passengers"
                 )
             }
-        }
-        ,
-
+        },
         sortBar = {
             LookupSortBar(
                 selected = sortMode,
                 onSortName = { sortMode = LookupSortMode.NAME },
                 onSortTrips = { sortMode = LookupSortMode.TRIPS }
             )
-        }
-    ) {
-        HeaderDetailHost(
-            selectedItem = selectedPassengerName,
-            onSelectItem = {
-                selectedPassengerName = it
-            },
-            onClearSelection = { selectedPassengerName = null },
-
-            summary = { onSelect ->
-                when {
-                    uiState.rows.isEmpty() -> {
-                        LookupEmptyState(
-                            message = "No lookup data loaded yet.\nUse the menu to import a CSV."
-                        )
-                    }
-
-                    filteredSummaries.isEmpty() -> {
-                        LookupEmptyState(
-                            message = "No passengers matched your search."
-                        )
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            state = summaryListState
-                        ) {
-                            items(
-                                items = filteredSummaries,
-                                key = { it.passenger }
-                            ) { summary ->
-                                LookupSummaryCard(
-                                    summary = summary,
-                                    onClick = { onSelect(summary.passenger) }
-                                )
-                            }
-                        }
-                    }
+        },
+        actionSlot = {
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Menu"
+                    )
                 }
-            },
 
-            detail = { _, onBack ->
-                if (selectedDetail == null) {
-                    LookupEmptyState(message = "Passenger not found.")
-                } else {
-                    VtsThinDivider()
-                    LookupDetailScreen(
-                        detail = selectedDetail,
-                        onBack = onBack
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Import") },
+                        onClick = {
+                            menuExpanded = false
+                            onImportClick()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text("Save") },
+                        onClick = {
+                            menuExpanded = false
+                        }
                     )
                 }
             }
-        )
-    }
+        },
+        isListEmpty = filteredSummaries.isEmpty(),
+        emptyState = {
+            LookupEmptyState(
+                message = if (uiState.rows.isEmpty()) {
+                    "No lookup data loaded yet.\nUse the menu to import a CSV."
+                } else {
+                    "No passengers matched your search."
+                }
+            )
+        },
+        listContent = {
+            LazyColumn(
+                state = summaryListState
+            ) {
+                items(
+                    items = filteredSummaries,
+                    key = { it.passenger }
+                ) { summary ->
+                    LookupSummaryCard(
+                        summary = summary,
+                        onClick = { selectedPassengerName = summary.passenger }
+                    )
+                }
+            }
+        },
+        detailContent = {
+            if (selectedDetail == null) {
+                LookupEmptyState(message = "Passenger not found.")
+            } else {
+                LookupDetailContent(detail = selectedDetail)
+            }
+        }
+    )
 }
 
 @Composable
@@ -308,59 +290,43 @@ private fun LookupSummaryCard(
         )
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LookupDetailScreen(
-    detail: LookupPassengerDetail,
-    onBack: () -> Unit,
+private fun LookupDetailContent(
+    detail: LookupPassengerDetail
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(VtsSpacing.md)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            top = VtsSpacing.sm,
+            bottom = VtsSpacing.fabClearance
+        ),
+        verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = VtsSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
-        ) {
-            stickyHeader {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(bottom = VtsSpacing.xs)
-                ) {
-                    VtsScreenHeader(
-                        title = detail.passenger,
-                        subtitle = detail.phone,
-                        showDivider = false
-                    )
-                }
-            }
-
-            items(detail.dayGroups) { dayGroup ->
-                LookupTripDateCard(
-                    date = dayGroup.driveDate.orEmpty(),
-                    trips = dayGroup.trips
+        stickyHeader {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(bottom = VtsSpacing.xs)
+            ) {
+                VtsScreenHeader(
+                    title = detail.passenger,
+                    subtitle = detail.phone,
+                    showDivider = false
                 )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(VtsSpacing.fabClearance))
             }
         }
 
-        VtsBackButton(
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .navigationBarsPadding()
-                .padding(start = VtsSpacing.lg, bottom = VtsSpacing.lg)
-        )
+        items(detail.dayGroups) { dayGroup ->
+            LookupTripDateCard(
+                date = dayGroup.driveDate.orEmpty(),
+                trips = dayGroup.trips
+            )
+        }
     }
 }
-
 
 @Composable
 private fun LookupTripDateCard(
@@ -376,7 +342,6 @@ private fun LookupTripDateCard(
         )
 
         Spacer(Modifier.height(6.dp))
-
         Spacer(Modifier.height(VtsSpacing.sm))
 
         trips.forEachIndexed { index, trip ->
@@ -523,6 +488,7 @@ private data class LookupPassengerSummary(
     val trips: List<LookupRow>
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassengerSummary> {
     return rows
         .filter { !it.passenger.isNullOrBlank() }
@@ -556,7 +522,6 @@ private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassenger
         }
 }
 
-
 private fun normalizedDisplayDate(raw: String?): String {
     val parsed = parseLookupDate(raw)
     return if (parsed != null) {
@@ -566,14 +531,13 @@ private fun normalizedDisplayDate(raw: String?): String {
     }
 }
 
-
 private fun parseLookupDate(raw: String?): LocalDate? {
     val s = raw?.trim().orEmpty()
     if (s.isBlank()) return null
 
-    val r1 = Regex("""(20\d{2})[./-](\d{1,2})[./-](\d{1,2})""")   // yyyy-mm-dd
-    val r2 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](\d{2})""")     // mm-dd-yy
-    val r3 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](20\d{2})""")   // mm-dd-yyyy
+    val r1 = Regex("""(20\d{2})[./-](\d{1,2})[./-](\d{1,2})""")
+    val r2 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](\d{2})""")
+    val r3 = Regex("""(\d{1,2})[./-](\d{1,2})[./-](20\d{2})""")
 
     r1.matchEntire(s)?.let {
         return safeDate(
@@ -603,6 +567,7 @@ private fun parseLookupDate(raw: String?): LocalDate? {
     return null
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun safeDate(year: Int, month: Int, day: Int): LocalDate? {
     return try {
         LocalDate.of(year, month, day)
@@ -610,6 +575,7 @@ private fun safeDate(year: Int, month: Int, day: Int): LocalDate? {
         null
     }
 }
+
 private fun normalizePassengerKey(name: String): String {
     return name.trim().lowercase(Locale.getDefault())
 }
@@ -631,5 +597,3 @@ private fun loadLookupUri(context: Context): Uri? {
 
     return runCatching { value.toUri() }.getOrNull()
 }
-
-

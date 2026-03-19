@@ -314,7 +314,8 @@ private fun LookupDetailContent(
                     .padding(bottom = VtsSpacing.xs)
             ) {
                 VtsDirectoryDetailCard(
-                    title = detail.passenger
+                    title = detail.passenger,
+                    showDivider = false
                 ) {
                     VtsInfoRow(
                         label = "Phone",
@@ -338,37 +339,40 @@ private fun LookupTripDateCard(
     trips: List<LookupTripDetail>
 ) {
     VtsCard {
-        Text(
-            text = date,
-            style = MaterialTheme.typography.titleMedium,
-            color = VtsGreen,
-            fontWeight = FontWeight.SemiBold
-        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
+        ) {
+            Text(
+                text = date,
+                style = MaterialTheme.typography.titleMedium,
+                color = VtsGreen,
+                fontWeight = FontWeight.SemiBold
+            )
 
-        Spacer(Modifier.height(6.dp))
-        Spacer(Modifier.height(VtsSpacing.sm))
+            VtsThinDivider()
 
-        trips.forEachIndexed { index, trip ->
-            if (index > 0) {
-                Spacer(Modifier.height(VtsSpacing.sm))
-            }
+            trips.forEachIndexed { index, trip ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
+                ) {
+                    LookupLabelValueRow(
+                        label = "Pickup:",
+                        value = trip.pickup
+                    )
+                    LookupLabelValueRow(
+                        label = "Drop-off:",
+                        value = trip.dropoff
+                    )
+                }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
-            ) {
-                LookupLabelValueRow(
-                    label = "Pickup:",
-                    value = trip.pickup
-                )
-                LookupLabelValueRow(
-                    label = "Drop-off:",
-                    value = trip.dropoff
-                )
+                if (index < trips.lastIndex) {
+                    Spacer(modifier = Modifier.height(VtsSpacing.sm))
+                }
             }
         }
     }
 }
-
 @Composable
 private fun LookupLabelValueRow(
     label: String,

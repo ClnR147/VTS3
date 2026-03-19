@@ -18,6 +18,7 @@ import com.example.vtsdaily3.ui.theme.VtsSpacing
 fun VtsDirectoryDetailCard(
     title: String,
     actions: (@Composable RowScope.() -> Unit)? = null,
+    showDivider: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     VtsCard {
@@ -45,7 +46,9 @@ fun VtsDirectoryDetailCard(
                 }
             }
 
-            VtsThinDivider()
+            if (showDivider) {
+                VtsThinDivider()
+            }
 
             content()
         }

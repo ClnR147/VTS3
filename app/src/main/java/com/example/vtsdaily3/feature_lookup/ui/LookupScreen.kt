@@ -49,7 +49,9 @@ import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.util.VtsDateFormat
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
+import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
+import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
 import com.example.vtsdaily3.ui.template.VtsThinDivider
 
 @RequiresApi(Build.VERSION_CODES.KITKAT)
@@ -311,11 +313,14 @@ private fun LookupDetailContent(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(bottom = VtsSpacing.xs)
             ) {
-                VtsScreenHeader(
-                    title = detail.passenger,
-                    subtitle = detail.phone,
-                    showDivider = false
-                )
+                VtsDirectoryDetailCard(
+                    title = detail.passenger
+                ) {
+                    VtsInfoRow(
+                        label = "Phone",
+                        value = detail.phone.orEmpty()
+                    )
+                }
             }
         }
 
@@ -327,7 +332,6 @@ private fun LookupDetailContent(
         }
     }
 }
-
 @Composable
 private fun LookupTripDateCard(
     date: String,

@@ -65,7 +65,12 @@ fun VtsDirectoryScreenShell(
                 )
             }
 
-            detailContent()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                detailContent()
+            }
         } else {
             if (searchBar != null) {
                 searchBar()
@@ -79,13 +84,17 @@ fun VtsDirectoryScreenShell(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (sortBar != null) {
-                        Box(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
                             sortBar()
                         }
                     }
 
                     if (actionSlot != null) {
-                        Box {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
                             actionSlot()
                         }
                     }
@@ -96,7 +105,7 @@ fun VtsDirectoryScreenShell(
 
             VtsThinDivider()
 
-            Spacer(modifier = Modifier.height(VtsSpacing.sm))
+            Spacer(modifier = Modifier.height(VtsSpacing.md))
 
             Box(
                 modifier = Modifier.fillMaxSize()

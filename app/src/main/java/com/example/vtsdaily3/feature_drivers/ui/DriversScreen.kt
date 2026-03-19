@@ -207,12 +207,9 @@ private fun DriversScreenContent(
     VtsDirectoryScreenShell(
         title = "Drivers",
         showingDetail = false,
-        searchBar = {
-            DriverSearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it }
-            )
-        },
+        searchValue = searchQuery,
+        onSearchValueChange = { searchQuery = it },
+        searchPlaceholder = "Search drivers",
         sortBar = {
             DriverSortBar(
                 sortMode = sortMode,
@@ -260,27 +257,6 @@ private fun DriversScreenContent(
                 }
             )
         }
-    )
-}
-
-@Composable
-private fun DriverSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        label = { Text("Search drivers") },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = VtsTextPrimary_Light,
-            unfocusedBorderColor = VtsTextPrimary_Light,
-            focusedLabelColor = VtsTextPrimary_Light,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            cursorColor = VtsTextPrimary_Light
-        )
     )
 }
 
@@ -373,7 +349,7 @@ private fun DriversList(
 }
 
 @Composable
-private fun DriverRowCard(
+fun DriverRowCard(
     driver: DriverContact,
     onClick: () -> Unit
 ) {

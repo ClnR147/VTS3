@@ -187,24 +187,12 @@ private fun LookupScreenContent(
         title = "Passenger Lookup",
         showingDetail = selectedPassengerName != null,
         onBackFromDetail = { selectedPassengerName = null },
-        searchBar = {
-            Box(
-                modifier = Modifier.padding(
-                    start = VtsSpacing.sm,
-                    end = VtsSpacing.sm,
-                    top = 0.dp
-                )
-            ) {
-                VtsSearchField(
-                    value = searchQuery,
-                    onValueChange = {
-                        searchQuery = it
-                        selectedPassengerName = null
-                    },
-                    placeholder = "Search passengers"
-                )
-            }
+        searchValue = searchQuery,
+        onSearchValueChange = {
+            searchQuery = it
+            selectedPassengerName = null
         },
+        searchPlaceholder = "Search passengers",
         sortBar = {
             LookupSortBar(
                 selected = sortMode,
@@ -350,7 +338,7 @@ private fun LookupTripDateCard(
                 fontWeight = FontWeight.SemiBold
             )
 
-            VtsThinDivider()
+           /* VtsThinDivider() */
 
             trips.forEachIndexed { index, trip ->
                 Column(
@@ -374,7 +362,7 @@ private fun LookupTripDateCard(
     }
 }
 @Composable
-private fun LookupLabelValueRow(
+fun LookupLabelValueRow(
     label: String,
     value: String
 ) {

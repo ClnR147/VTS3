@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 
@@ -21,19 +23,26 @@ fun VtsScreenHeader(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 29.dp, bottom = 20.dp), // ⭐ MATCH Schedule
+        verticalArrangement = Arrangement.spacedBy(VtsSpacing.xl)
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         if (!subtitle.isNullOrBlank()) {
             Text(
                 text = subtitle,
+                modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
                 color = VtsGreen
             )
         }

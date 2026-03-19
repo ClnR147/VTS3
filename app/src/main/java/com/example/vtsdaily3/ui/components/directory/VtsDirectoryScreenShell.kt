@@ -21,7 +21,7 @@ import com.example.vtsdaily3.ui.theme.VtsSpacing
 @Composable
 fun VtsDirectoryScreenShell(
     title: String,
-    showingDetail: Boolean,
+    showingDetail: Boolean = false,
     onBackFromDetail: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     searchBar: (@Composable () -> Unit)? = null,
@@ -43,7 +43,7 @@ fun VtsDirectoryScreenShell(
         }
     },
     listContent: @Composable () -> Unit,
-    detailContent: @Composable () -> Unit
+    detailContent: (@Composable () -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -57,7 +57,7 @@ fun VtsDirectoryScreenShell(
 
         Spacer(modifier = Modifier.height(VtsSpacing.md))
 
-        if (showingDetail) {
+        if (showingDetail && detailContent != null) {
             if (onBackFromDetail != null) {
                 VtsBackButton(
                     onClick = onBackFromDetail,
@@ -79,9 +79,7 @@ fun VtsDirectoryScreenShell(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (sortBar != null) {
-                        Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
+                        Box(modifier = Modifier.weight(1f)) {
                             sortBar()
                         }
                     }
@@ -101,8 +99,7 @@ fun VtsDirectoryScreenShell(
             Spacer(modifier = Modifier.height(VtsSpacing.sm))
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 if (isListEmpty) {
                     emptyState()

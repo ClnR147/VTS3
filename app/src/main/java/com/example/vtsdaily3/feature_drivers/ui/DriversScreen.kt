@@ -259,8 +259,7 @@ private fun DriversScreenContent(
                     editingDriver = driver
                 }
             )
-        },
-        detailContent = {}
+        }
     )
 }
 

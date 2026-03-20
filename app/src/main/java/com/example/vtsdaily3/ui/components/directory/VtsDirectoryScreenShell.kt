@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
 import com.example.vtsdaily3.ui.components.VtsSortBar
@@ -45,7 +46,7 @@ fun VtsDirectoryScreenShell(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = VtsSpacing.xl),
+                .padding(vertical = VtsSpacing.md),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -68,7 +69,7 @@ fun VtsDirectoryScreenShell(
             showDivider = false
         )
 
-        Spacer(modifier = Modifier.height(VtsSpacing.md))
+        Spacer(modifier = Modifier.height(VtsSpacing.xs - 2.dp))
 
         if (showingDetail && detailContent != null) {
             /* if (onBackFromDetail != null) {
@@ -90,7 +91,7 @@ fun VtsDirectoryScreenShell(
                     onValueChange = onSearchValueChange,
                     placeholder = searchPlaceholder
                 )
-                Spacer(modifier = Modifier.height(VtsSpacing.sm))
+                Spacer(modifier = Modifier.height(VtsSpacing.sm - 6.dp))
             }
 
             if (
@@ -184,3 +185,5 @@ fun VtsSearchField(
         )
     )
 }
+
+

@@ -55,7 +55,6 @@ import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
 import com.example.vtsdaily3.ui.template.VtsThinDivider
 
-@RequiresApi(Build.VERSION_CODES.KITKAT)
 @Composable
 fun LookupScreen(
     initialPassengerName: String? = null,
@@ -239,7 +238,8 @@ private fun LookupScreenContent(
         },
         listContent = {
             LazyColumn(
-                state = summaryListState
+                state = summaryListState,
+                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
             ) {
                 items(
                     items = filteredSummaries,
@@ -480,7 +480,6 @@ private data class LookupPassengerSummary(
     val trips: List<LookupRow>
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun buildPassengerSummaries(rows: List<LookupRow>): List<LookupPassengerSummary> {
     return rows
         .filter { !it.passenger.isNullOrBlank() }

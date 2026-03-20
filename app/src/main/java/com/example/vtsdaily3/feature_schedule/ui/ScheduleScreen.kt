@@ -111,7 +111,7 @@ fun ScheduleScreen(
             text = "Schedule",
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 29.dp, bottom = 20.dp),
+                .padding(top = 29.dp, bottom = 21.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
@@ -483,7 +483,7 @@ fun ScheduleHeaderCard(
         ),
         border = BorderStroke(.5.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
+        defaultElevation = 4.dp
         )
     ) {
         Column(

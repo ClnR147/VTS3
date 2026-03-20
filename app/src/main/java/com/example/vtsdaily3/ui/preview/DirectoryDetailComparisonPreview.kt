@@ -143,7 +143,7 @@ private fun LookupTripDateCardPreviewContent() {
             )
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(VtsSpacing.sm)
+                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
             ) {
                 listOf(
                     LookupTripDetail(

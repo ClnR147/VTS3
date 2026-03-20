@@ -325,8 +325,7 @@ private fun LookupTripDateCard(
 ) {
     VtsCard {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = date,
@@ -335,7 +334,7 @@ private fun LookupTripDateCard(
                 fontWeight = FontWeight.SemiBold
             )
 
-           /* VtsThinDivider() */
+            Spacer(modifier = Modifier.height(VtsSpacing.md))
 
             trips.forEachIndexed { index, trip ->
                 Column(
@@ -352,7 +351,7 @@ private fun LookupTripDateCard(
                 }
 
                 if (index < trips.lastIndex) {
-                    Spacer(modifier = Modifier.height(VtsSpacing.sm))
+                    Spacer(modifier = Modifier.height(VtsSpacing.xs))
                 }
             }
         }
@@ -369,16 +368,16 @@ fun LookupLabelValueRow(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .width(72.dp)
-                .padding(end = 4.dp)
+                .width(80.dp)
         )
 
         Text(
             text = value,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
     }

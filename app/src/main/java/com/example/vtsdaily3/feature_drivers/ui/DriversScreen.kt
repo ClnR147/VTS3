@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,7 @@ import com.example.vtsdaily3.feature_drivers.data.DriversFolderPrefs
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
+import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.theme.VtsSpacing
@@ -104,7 +106,7 @@ private fun DriversScreenContent(
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(DriverSortMode.NAME) }
     var driverPendingDelete by remember { mutableStateOf<DriverContact?>(null) }
-
+    var menuExpanded by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editingDriver by remember { mutableStateOf<DriverContact?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -210,20 +212,37 @@ private fun DriversScreenContent(
         searchValue = searchQuery,
         onSearchValueChange = { searchQuery = it },
         searchPlaceholder = "Search drivers",
-        sortBar = {
-            DriverSortBar(
-                sortMode = sortMode,
-                onSortSelected = { sortMode = it }
-            )
+        sortOptions = listOf("Name", "Van"),
+        selectedSortOption = when (sortMode) {
+            DriverSortMode.NAME -> "Name"
+            DriverSortMode.VAN -> "Van"
+        },
+        onSortOptionSelected = { option ->
+            sortMode = when (option) {
+                "Name" -> DriverSortMode.NAME
+                "Van" -> DriverSortMode.VAN
+                else -> sortMode
+            }
         },
         actionSlot = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true }
+            VtsOverflowMenu(
+                expanded = menuExpanded,
+                onExpandedChange = { menuExpanded = it }
             ) {
-                Icon(
-                    imageVector = Icons.Filled.PersonAdd,
-                    contentDescription = "Add driver",
-                    tint = VtsTextPrimary_Light
+                DropdownMenuItem(
+                    text = { Text("Choose Folder") },
+                    onClick = {
+                        menuExpanded = false
+                        onChooseFolder()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Add Driver") },
+                    onClick = {
+                        menuExpanded = false
+                        showAddDialog = true
+                    }
                 )
             }
         },

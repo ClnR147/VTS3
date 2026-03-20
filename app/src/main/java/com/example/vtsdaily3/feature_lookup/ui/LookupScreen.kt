@@ -49,6 +49,7 @@ import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.util.VtsDateFormat
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
+import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
@@ -193,41 +194,37 @@ private fun LookupScreenContent(
             selectedPassengerName = null
         },
         searchPlaceholder = "Search passengers",
-        sortBar = {
-            LookupSortBar(
-                selected = sortMode,
-                onSortName = { sortMode = LookupSortMode.NAME },
-                onSortTrips = { sortMode = LookupSortMode.TRIPS }
-            )
+        sortOptions = listOf("Name", "Trips"),
+        selectedSortOption = when (sortMode) {
+            LookupSortMode.NAME -> "Name"
+            LookupSortMode.TRIPS -> "Trips"
+        },
+        onSortOptionSelected = { option ->
+            sortMode = when (option) {
+                "Name" -> LookupSortMode.NAME
+                "Trips" -> LookupSortMode.TRIPS
+                else -> sortMode
+            }
         },
         actionSlot = {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Menu"
-                    )
-                }
+            VtsOverflowMenu(
+                expanded = menuExpanded,
+                onExpandedChange = { menuExpanded = it }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Import") },
+                    onClick = {
+                        menuExpanded = false
+                        onImportClick()
+                    }
+                )
 
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Import") },
-                        onClick = {
-                            menuExpanded = false
-                            onImportClick()
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Save") },
-                        onClick = {
-                            menuExpanded = false
-                        }
-                    )
-                }
+                DropdownMenuItem(
+                    text = { Text("Save") },
+                    onClick = {
+                        menuExpanded = false
+                    }
+                )
             }
         },
         isListEmpty = filteredSummaries.isEmpty(),

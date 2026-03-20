@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.example.vtsdaily3.ui.components.VtsBackButton
 import com.example.vtsdaily3.ui.components.VtsScreenHeader
+import com.example.vtsdaily3.ui.components.VtsSortBar
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import com.example.vtsdaily3.ui.theme.VtsShapes
@@ -35,7 +36,9 @@ fun VtsDirectoryScreenShell(
     searchValue: String? = null,
     onSearchValueChange: ((String) -> Unit)? = null,
     searchPlaceholder: String = "Search",
-    sortBar: (@Composable () -> Unit)? = null,
+    sortOptions: List<String>? = null,
+    selectedSortOption: String? = null,
+    onSortOptionSelected: ((String) -> Unit)? = null,
     actionSlot: (@Composable () -> Unit)? = null,
     isListEmpty: Boolean,
     emptyState: @Composable () -> Unit = {
@@ -90,17 +93,28 @@ fun VtsDirectoryScreenShell(
                 Spacer(modifier = Modifier.height(VtsSpacing.sm))
             }
 
-            if (sortBar != null || actionSlot != null) {
+            if (
+                (sortOptions != null && selectedSortOption != null && onSortOptionSelected != null)
+                || actionSlot != null
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(VtsSpacing.sm),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (sortBar != null) {
+                    if (
+                        sortOptions != null &&
+                        selectedSortOption != null &&
+                        onSortOptionSelected != null
+                    ) {
                         Box(
                             modifier = Modifier.weight(1f)
                         ) {
-                            sortBar()
+                            VtsSortBar(
+                                options = sortOptions,
+                                selectedOption = selectedSortOption,
+                                onOptionSelected = onSortOptionSelected
+                            )
                         }
                     }
 

@@ -2,6 +2,7 @@ package com.example.vtsdaily3.feature_drivers.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -11,17 +12,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -38,8 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_drivers.data.DriverContact
+import com.example.vtsdaily3.feature_drivers.data.DriverImportParser
 import com.example.vtsdaily3.feature_drivers.data.DriverStore
 import com.example.vtsdaily3.feature_drivers.data.DriversFolderPrefs
+import com.example.vtsdaily3.ui.common.importing.ImportResult
+import com.example.vtsdaily3.ui.common.importing.VtsFileImporter
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
@@ -68,6 +66,31 @@ fun DriversScreen() {
         drivers = DriverStore.load(context)
     }
 
+    val importDriversLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        when (
+            val result = VtsFileImporter.importFromUri(
+                context = context,
+                uri = uri,
+                parser = DriverImportParser::parseCsv
+            )
+        ) {
+            is ImportResult.Success -> {
+                DriverStore.save(context, result.data)
+                drivers = DriverStore.load(context)
+            }
+
+            is ImportResult.Error -> {
+                Log.e("DriverImport", result.message)
+            }
+        }
+    }
+
+
+
     LaunchedEffect(Unit) {
         drivers = DriverStore.load(context)
     }
@@ -78,7 +101,10 @@ fun DriversScreen() {
             drivers = updated
             DriverStore.save(context, updated)
         },
-        onChooseFolder = { folderPickerLauncher.launch(null) }
+        onChooseFolder = { folderPickerLauncher.launch(null) },
+        onImportDrivers = {
+            importDriversLauncher.launch(arrayOf("text/*", "text/csv", "*/*"))
+        }
     )
 }
 
@@ -86,7 +112,8 @@ fun DriversScreen() {
 private fun DriversScreenContent(
     drivers: List<DriverContact>,
     onDriversChange: (List<DriverContact>) -> Unit,
-    onChooseFolder: () -> Unit
+    onChooseFolder: () -> Unit,
+    onImportDrivers: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(DriverSortMode.NAME) }
@@ -219,6 +246,14 @@ private fun DriversScreenContent(
                     onClick = {
                         menuExpanded = false
                         onChooseFolder()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Import Drivers") },
+                    onClick = {
+                        menuExpanded = false
+                        onImportDrivers()
                     }
                 )
 
@@ -451,3 +486,4 @@ private fun DriverEditDialog(
         }
     )
 }
+

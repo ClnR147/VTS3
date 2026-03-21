@@ -1,5 +1,6 @@
 package com.example.vtsdaily3.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,7 +41,9 @@ fun VtsSortBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         options.forEach { option ->
+
             val isSelected = option == selectedOption
+            val borderColor = if (isSelected) VtsGreen else VtsGreen.copy(alpha = 0.3f)
 
             if (isSelected) {
                 Button(
@@ -65,6 +68,10 @@ fun VtsSortBar(
                         .height(36.dp),
                     colors = unselectedColors,
                     shape = RoundedCornerShape(50),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = borderColor
+                    ),
                     contentPadding = PaddingValues(
                         horizontal = 12.dp,
                         vertical = 4.dp

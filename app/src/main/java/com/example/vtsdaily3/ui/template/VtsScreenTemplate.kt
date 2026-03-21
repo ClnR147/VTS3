@@ -80,7 +80,7 @@ fun VtsScreenTemplate(
             ) {
                 searchBar?.invoke()
                 sortBar?.invoke()
-                VtsThinDivider()
+                /*VtsThinDivider()*/
             }
 
             Spacer(Modifier.height(VtsSpacing.xs))
@@ -107,7 +107,7 @@ fun VtsThickDivider() {
     )
 }
 
-@Composable
+/* @Composable
 fun VtsThinDivider() {
     Box(
         modifier = Modifier
@@ -116,4 +116,4 @@ fun VtsThinDivider() {
             .height(VtsDivider.thinHeight)
             .background(VtsGreen)
     )
-}
+} */

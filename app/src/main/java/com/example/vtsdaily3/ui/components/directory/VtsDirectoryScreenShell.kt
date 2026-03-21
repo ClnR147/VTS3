@@ -72,17 +72,22 @@ fun VtsDirectoryScreenShell(
         Spacer(modifier = Modifier.height(VtsSpacing.xs - 2.dp))
 
         if (showingDetail && detailContent != null) {
-            /* if (onBackFromDetail != null) {
-                VtsBack(
-                    onClick = onBackFromDetail,
-                    modifier = Modifier.padding(bottom = VtsSpacing.sm)
-                )
-            } */
-
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 detailContent()
+
+                if (onBackFromDetail != null) {
+                    VtsBackButton(
+                        onClick = onBackFromDetail,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(
+                                start = VtsSpacing.sm,
+                                bottom = VtsSpacing.sm
+                            )
+                    )
+                }
             }
         } else {
             if (searchValue != null && onSearchValueChange != null) {

@@ -53,7 +53,7 @@ import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
-import com.example.vtsdaily3.ui.template.VtsThinDivider
+
 
 @Composable
 fun LookupScreen(
@@ -286,7 +286,6 @@ private fun LookupDetailContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = VtsSpacing.sm,
             bottom = VtsSpacing.fabClearance
         ),
         verticalArrangement = Arrangement.spacedBy(VtsSpacing.md)
@@ -296,7 +295,10 @@ private fun LookupDetailContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(bottom = VtsSpacing.xs)
+                    .padding(
+                        top = VtsSpacing.sm,
+                        bottom = VtsSpacing.xs
+                    )
             ) {
                 VtsDirectoryDetailCard(
                     title = detail.passenger,

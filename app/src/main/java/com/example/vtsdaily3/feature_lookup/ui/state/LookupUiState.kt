@@ -3,7 +3,6 @@ package com.example.vtsdaily3.feature_lookup.ui.state
 import com.example.vtsdaily3.feature_lookup.domain.LookupPassengerDetail
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.domain.LookupSummary
-import com.example.vtsdaily3.feature_lookup.domain.buildLookupPassengerDetail
 import com.example.vtsdaily3.feature_lookup.domain.buildLookupSummaries
 data class LookupUiState(
     var rows: List<LookupRow> = emptyList(),
@@ -23,20 +22,6 @@ fun buildLookupUiState(rows: List<LookupRow>): LookupUiState {
     )
 }
 
-fun selectPassenger(
-    state: LookupUiState,
-    passengerName: String
-): LookupUiState {
-    val detail = buildLookupPassengerDetail(state.rows, passengerName)
-    return state.copy(
-        selectedPassenger = passengerName,
-        selectedDetail = detail
-    )
-}
 
-fun clearSelectedPassenger(state: LookupUiState): LookupUiState {
-    return state.copy(
-        selectedPassenger = null,
-        selectedDetail = null
-    )
-}
+
+

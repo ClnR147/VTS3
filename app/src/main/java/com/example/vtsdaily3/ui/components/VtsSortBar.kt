@@ -32,7 +32,8 @@ fun VtsSortBar(
     )
 
     val unselectedColors = ButtonDefaults.outlinedButtonColors(
-        contentColor = VtsGreen
+        contentColor = VtsGreen,
+        containerColor = VtsGreen.copy(alpha = 0.05f)
     )
 
     Row(

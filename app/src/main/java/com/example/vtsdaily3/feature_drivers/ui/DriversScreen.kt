@@ -83,21 +83,6 @@ fun DriversScreen() {
 }
 
 @Composable
-fun DriversScreenPreviewContent(
-    drivers: List<DriverContact>
-) {
-    var localDrivers by remember { mutableStateOf(drivers) }
-
-    DriversScreenContent(
-        drivers = localDrivers,
-        onDriversChange = { updated ->
-            localDrivers = updated
-        },
-        onChooseFolder = {}
-    )
-}
-
-@Composable
 private fun DriversScreenContent(
     drivers: List<DriverContact>,
     onDriversChange: (List<DriverContact>) -> Unit,
@@ -279,39 +264,7 @@ private fun DriversScreenContent(
     )
 }
 
-@Composable
-private fun DriverSortBar(
-    sortMode: DriverSortMode,
-    onSortSelected: (DriverSortMode) -> Unit
-) {
-    Row(
-        modifier = Modifier.padding(vertical = 4.dp)
-    ) {
-        TextButton(
-            onClick = { onSortSelected(DriverSortMode.NAME) },
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = VtsTextPrimary_Light
-            )
-        ) {
-            Text(
-                text = if (sortMode == DriverSortMode.NAME) "Name ✓" else "Name"
-            )
-        }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        TextButton(
-            onClick = { onSortSelected(DriverSortMode.VAN) },
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = VtsTextPrimary_Light
-            )
-        ) {
-            Text(
-                text = if (sortMode == DriverSortMode.VAN) "Van ✓" else "Van"
-            )
-        }
-    }
-}
 
 @Composable
 private fun EmptyDriversState(

@@ -17,34 +17,47 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 val VtsLightColorScheme: ColorScheme = lightColorScheme(
-
     primary = VtsGreen,
     onPrimary = Color.White,
 
     secondary = VtsGreen,
     onSecondary = Color.White,
 
+    tertiary = VtsGreen,
+    onTertiary = Color.White,
+
     background = AppBackground,
     onBackground = VtsTextPrimary_Light,
 
-    surface = Color(0xFFE8F5E9),   // light green card background
+    surface = Color.White,
     onSurface = VtsTextPrimary_Light,
 
-    surfaceVariant = Color(0xFFE8F5E9),
+    surfaceVariant = Color.White,
     onSurfaceVariant = VtsTextSecondary_Light,
+
+    primaryContainer = VtsGreen,
+    onPrimaryContainer = Color.White,
+
+    secondaryContainer = Color(0xFFE8F5E9),
+    onSecondaryContainer = VtsTextPrimary_Light,
+
+    tertiaryContainer = Color(0xFFE8F5E9),
+    onTertiaryContainer = VtsTextPrimary_Light,
 
     outline = VtsOutline_Light,
 
     error = VtsError,
     onError = Color.White
 )
-
 val VtsDarkColorScheme: ColorScheme = darkColorScheme(
     primary = VtsGreen,
     onPrimary = Color.Black,
 
     secondary = VtsGreen,
     onSecondary = Color.Black,
+
+    tertiary = VtsGreen,
+    onTertiary = Color.Black,
 
     background = VtsBackground_Dark,
     onBackground = VtsText_OnDark,
@@ -55,8 +68,19 @@ val VtsDarkColorScheme: ColorScheme = darkColorScheme(
     surfaceVariant = VtsBackground_Dark,
     onSurfaceVariant = VtsText_OnDark,
 
+    primaryContainer = VtsGreen,
+    onPrimaryContainer = Color.Black,
+
+    secondaryContainer = VtsSurface_Dark,
+    onSecondaryContainer = VtsText_OnDark,
+
+    tertiaryContainer = VtsSurface_Dark,
+    onTertiaryContainer = VtsText_OnDark,
+
     outline = VtsOutline_Dark,
-    error = VtsError
+
+    error = VtsError,
+    onError = Color.Black
 )
 
 @Composable

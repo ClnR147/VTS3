@@ -92,7 +92,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
 }
 
-val apkDropDir: File = file("C:/AutoSyncToPhone/PassengerSchedules")
+val apkDropDir: File = file("C:/AutoSyncToPhone/PassengerSchedules/Builds")
 
 androidComponents {
     onVariants(selector().all()) { variant ->

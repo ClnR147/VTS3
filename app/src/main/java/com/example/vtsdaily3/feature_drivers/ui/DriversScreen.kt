@@ -108,6 +108,12 @@ fun DriversScreen() {
     )
 }
 
+private fun parseVanNumber(value: String): Int {
+    return value
+        .filter { it.isDigit() }
+        .toIntOrNull()
+        ?: Int.MAX_VALUE
+}
 @Composable
 private fun DriversScreenContent(
     drivers: List<DriverContact>,
@@ -138,7 +144,7 @@ private fun DriversScreenContent(
             .sortedWith(
                 when (sortMode) {
                     DriverSortMode.NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-                    DriverSortMode.VAN -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.vanNumber }
+                    DriverSortMode.VAN -> compareBy { parseVanNumber(it.vanNumber) }
                 }
             )
     }

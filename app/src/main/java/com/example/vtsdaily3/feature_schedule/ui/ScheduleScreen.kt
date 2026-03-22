@@ -70,7 +70,6 @@ import androidx.core.net.toUri
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
-import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 
 
 @Composable
@@ -119,6 +118,7 @@ fun ScheduleScreen(
         )
 
         ScheduleHeaderCard(
+            modifier = Modifier.padding(horizontal = 7.dp),
             selectedDateText = formattedSelectedDate,
             selectedViewMode = uiState.selectedViewMode,
             activeCount = uiState.activeCount,
@@ -393,11 +393,6 @@ private fun TripCard(
     }
 }
 
-private fun normalizeLookupName(raw: String): String {
-    return raw
-        .takeWhile { it != '+' && it != '(' }
-        .trim()
-}
 
 @Composable
 private fun EmptyScheduleState(
@@ -420,40 +415,6 @@ private fun EmptyScheduleState(
         )
     }
 }
-
-private fun availableActionsFor(status: TripStatus): List<TripMenuAction> {
-    return when (status) {
-        TripStatus.ACTIVE -> listOf(
-            TripMenuAction.COMPLETE,
-            TripMenuAction.CANCEL,
-            TripMenuAction.NOSHOW,
-            TripMenuAction.REMOVE
-        )
-
-        TripStatus.COMPLETED -> listOf(
-            TripMenuAction.REINSTATE,
-            TripMenuAction.REMOVE
-        )
-
-        TripStatus.CANCELLED,
-        TripStatus.NOSHOW,
-        TripStatus.REMOVED -> listOf(
-            TripMenuAction.REINSTATE
-        )
-    }
-}
-
-private fun statusLabel(status: TripStatus): String {
-    return when (status) {
-        TripStatus.ACTIVE -> "Active"
-        TripStatus.COMPLETED -> "Completed"
-        TripStatus.REMOVED -> "Removed"
-        TripStatus.CANCELLED -> "Cancelled"
-        TripStatus.NOSHOW -> "No Show"
-    }
-}
-
-
 
 enum class TripMenuAction(val label: String) {
     COMPLETE("Complete"),
@@ -552,32 +513,6 @@ fun ScheduleHeaderCard(
     }
 }
 
-@Composable
-private fun HeaderNavButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier
-            .width(80.dp)
-            .height(36.dp),
-        shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.5.dp, Color(0xFFB8C8B8)),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = Color(0xFF3B3B3B)
-        )
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
 
 @Composable
 fun ViewModeButton(
@@ -626,25 +561,6 @@ fun ViewModeButton(
                 fontWeight = FontWeight.SemiBold
             )
         }
-    }
-}
-
-@Composable
-private fun HeaderCountItem(
-    count: Int,
-    accentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = accentColor
-        )
     }
 }
 

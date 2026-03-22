@@ -12,9 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.vtsdaily3.feature_schedule.ui.ScheduleRoute
 import com.example.vtsdaily3.feature_lookup.ui.LookupScreen
-//import com.example.vtsdaily3.feature_drivers.ui.DriverScreenRoute
-//import com.example.vtsdaily3.feature_contacts.ui.ContactScreen
-//import com.example.vtsdaily3.feature_clinics.ui.ClinicScreenRoute
+import com.example.vtsdaily3.feature_contacts.ui.ContactsScreen
+import com.example.vtsdaily3.feature_clinics.ui.ClinicsScreen
 import com.example.vtsdaily3.ui.navigation.AppDestination
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -63,25 +62,14 @@ fun AppNavHost(
         }
 
         composable(AppDestination.Contacts.route) {
-            ContactScreen()
+            ContactsScreen()
         }
 
         composable(AppDestination.Clinics.route) {
-            ClinicScreenRoute(treeUri = treeUri)
+            ClinicsScreen()
         }
     }
 
-}
-
-
-@Composable
-fun ClinicScreenRoute(treeUri: Uri) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun ContactScreen() {
-    TODO("Not yet implemented")
 }
 
 @Composable

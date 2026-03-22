@@ -1,6 +1,7 @@
 package com.example.vtsdaily3.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,15 +23,22 @@ enum class VtsCardDensity {
 fun VtsCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     density: VtsCardDensity = VtsCardDensity.Default,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val cardModifier = if (onClick != null) {
-        modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-    } else {
-        modifier.fillMaxWidth()
+    val cardModifier = when {
+        onClick != null || onLongClick != null -> {
+            modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { onClick?.invoke() },
+                    onLongClick = { onLongClick?.invoke() }
+                )
+        }
+        else -> {
+            modifier.fillMaxWidth()
+        }
     }
 
     val verticalPadding = when (density) {

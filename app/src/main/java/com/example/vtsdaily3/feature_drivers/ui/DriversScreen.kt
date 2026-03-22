@@ -45,6 +45,7 @@ import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.theme.VtsSpacing
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun DriversScreen() {
@@ -121,6 +122,7 @@ private fun DriversScreenContent(
     onChooseFolder: () -> Unit,
     onImportDrivers: () -> Unit
 ) {
+    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(DriverSortMode.NAME) }
     var driverPendingDelete by remember { mutableStateOf<DriverContact?>(null) }
@@ -298,6 +300,13 @@ private fun DriversScreenContent(
             DriversList(
                 drivers = filteredAndSortedDrivers,
                 onDriverClick = { driver ->
+                    val cleanedPhone = driver.phone.filter { it.isDigit() || it == '+' }
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:$cleanedPhone")
+                    }
+                    context.startActivity(intent)
+                },
+                onDriverLongClick = { driver ->
                     editingDriver = driver
                 }
             )
@@ -347,7 +356,8 @@ private fun EmptyDriversState(
 @Composable
 private fun DriversList(
     drivers: List<DriverContact>,
-    onDriverClick: (DriverContact) -> Unit
+    onDriverClick: (DriverContact) -> Unit,
+    onDriverLongClick: (DriverContact) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -355,7 +365,12 @@ private fun DriversList(
         items(drivers) { driver ->
             DriverRowCard(
                 driver = driver,
-                onClick = { onDriverClick(driver) }
+                onClick = {
+                    onDriverClick(driver)
+                },
+                onLongClick = {
+                    onDriverLongClick(driver)
+                }
             )
         }
     }
@@ -364,10 +379,12 @@ private fun DriversList(
 @Composable
 fun DriverRowCard(
     driver: DriverContact,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     VtsCard(
         onClick = onClick,
+        onLongClick = onLongClick,
         density = VtsCardDensity.Compact
     ) {
         VtsSummaryRow(

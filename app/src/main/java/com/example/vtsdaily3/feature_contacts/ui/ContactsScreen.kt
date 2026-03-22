@@ -2,9 +2,7 @@ package com.example.vtsdaily3.feature_contacts.ui
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -21,13 +19,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_contacts.data.ContactEntry
 import com.example.vtsdaily3.feature_contacts.data.ContactStore
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.util.Log
+import androidx.compose.material3.DropdownMenuItem
+import androidx.core.net.toUri
+
 
 enum class ContactSortMode {
     NAME
@@ -39,8 +44,38 @@ fun ContactsScreen() {
 
     var contacts by remember { mutableStateOf<List<ContactEntry>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
+    fun reloadContacts() {
         contacts = ContactStore.load(context)
+    }
+
+    val importContactsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) {
+            Log.d("ContactsImport", "Import cancelled")
+            return@rememberLauncherForActivityResult
+        }
+
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+        }
+
+        try {
+            val imported = parseContactsCsv(context, uri)
+            ContactStore.save(context, imported)
+            reloadContacts()
+            Log.d("ContactsImport", "Imported ${imported.size} contacts")
+        } catch (e: Exception) {
+            Log.e("ContactsImport", "Import failed", e)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        reloadContacts()
     }
 
     ContactsScreenContent(
@@ -52,18 +87,22 @@ fun ContactsScreen() {
         onCallContact = { contact ->
             val cleanedPhone = contact.phone.filter { it.isDigit() || it == '+' }
             val intent = Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:$cleanedPhone")
+                data = "tel:$cleanedPhone".toUri()
             }
             context.startActivity(intent)
+        },
+        onImportContacts = {
+            importContactsLauncher.launch(arrayOf("*/*"))
         }
     )
 }
 
 @Composable
-private fun ContactsScreenContent(
+fun ContactsScreenContent(
     contacts: List<ContactEntry>,
     onContactsChange: (List<ContactEntry>) -> Unit,
-    onCallContact: (ContactEntry) -> Unit
+    onCallContact: (ContactEntry) -> Unit,
+    onImportContacts: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(ContactSortMode.NAME) }
@@ -191,6 +230,10 @@ private fun ContactsScreenContent(
                     onAddContact = {
                         menuExpanded = false
                         showAddDialog = true
+                    },
+                    onImportContacts = {
+                        menuExpanded = false
+                        onImportContacts()
                     }
                 )
             }
@@ -230,12 +273,52 @@ private fun ContactsScreenContent(
     )
 }
 
+private fun parseContactsCsv(
+    context: android.content.Context,
+    uri: Uri
+): List<ContactEntry> {
+    val rows = mutableListOf<ContactEntry>()
+
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        BufferedReader(InputStreamReader(inputStream)).use { reader ->
+            reader.lineSequence()
+                .drop(1) // skip header
+                .forEach { line ->
+                    val trimmed = line.trim()
+                    if (trimmed.isBlank()) return@forEach
+
+                    val parts = trimmed.split(",")
+                    if (parts.size < 2) return@forEach
+
+                    val name = parts[0].trim()
+                    val phone = parts[1].trim()
+
+                    if (name.isNotBlank()) {
+                        rows.add(
+                            ContactEntry(
+                                name = name,
+                                phone = phone
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    return rows
+}
 @Composable
 private fun ContactMenuContent(
-    onAddContact: () -> Unit
+    onAddContact: () -> Unit,
+    onImportContacts: () -> Unit
 ) {
-    androidx.compose.material3.DropdownMenuItem(
+    DropdownMenuItem(
         text = { Text("Add Contact") },
         onClick = onAddContact
+    )
+
+    DropdownMenuItem(
+        text = { Text("Import Contacts") },
+        onClick = onImportContacts
     )
 }

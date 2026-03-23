@@ -107,6 +107,7 @@ fun ScheduleScreen(
     notesTrip?.let { selectedTrip ->
         PassengerNotesScreen(
             trip = selectedTrip,
+            clinics = clinics,
             onClose = { notesTrip = null }
         )
         return

@@ -25,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
+import com.example.vtsdaily3.feature_clinics.domain.NoteSide
+import com.example.vtsdaily3.feature_clinics.domain.resolveNoteSideForTrip
 import com.example.vtsdaily3.model.Trip
 import com.example.vtsdaily3.feature_schedule.notes.displayPassengerNameForNotes
 
@@ -32,9 +35,15 @@ import com.example.vtsdaily3.feature_schedule.notes.displayPassengerNameForNotes
 @Composable
 fun PassengerNotesScreen(
     trip: Trip,
+    clinics: List<ClinicEntry>,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
+    val noteSide = resolveNoteSideForTrip(
+        fromAddress = trip.fromAddress,
+        toAddress = trip.toAddress,
+        clinics = clinics
+    )
 
     val rawPassengerName = trip.name.trim()
     val passengerName = displayPassengerNameForNotes(rawPassengerName)
@@ -60,7 +69,9 @@ fun PassengerNotesScreen(
     val initialSide = when {
         existingPu != null -> ResidenceSide.PU
         existingDo != null -> ResidenceSide.DO
-        else -> if (doAddress.isBlank()) ResidenceSide.PU else ResidenceSide.PU
+        noteSide == NoteSide.PU -> ResidenceSide.PU
+        noteSide == NoteSide.DO -> ResidenceSide.DO
+        else -> ResidenceSide.PU
     }
 
     val initialRecord = when (initialSide) {

@@ -7,6 +7,10 @@ data class ClinicMatchResult(
     val matchedAddress: String
 )
 
+enum class NoteSide {
+    PU,
+    DO
+}
 private val weakAddressTokens = setOf(
     "st", "street",
     "rd", "road",
@@ -111,4 +115,20 @@ fun resolveClinicPhoneForTrip(
     )
 
     return clinic?.phone?.trim()?.takeIf { it.isNotBlank() }
+}
+
+fun resolveNoteSideForTrip(
+    fromAddress: String?,
+    toAddress: String?,
+    clinics: List<ClinicEntry>
+): NoteSide? {
+
+    val fromClinic = findMatchingClinic(fromAddress, clinics)
+    val toClinic = findMatchingClinic(toAddress, clinics)
+
+    return when {
+        fromClinic != null && toClinic == null -> NoteSide.DO
+        toClinic != null && fromClinic == null -> NoteSide.PU
+        else -> null // both or neither → manual
+    }
 }

@@ -37,6 +37,7 @@ import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
+import com.example.vtsdaily3.feature_lookup.util.normalizePassengerNameForLookup
 import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
@@ -114,8 +115,12 @@ private fun LookupScreenContent(
         initialPassengerName
             ?.takeIf { it.isNotBlank() }
             ?.let { passengerName ->
-                searchQuery = passengerName
-                selectedPassengerName = passengerName
+
+                val normalized = normalizePassengerNameForLookup(passengerName)
+
+                searchQuery = normalized
+                selectedPassengerName = normalized
+
                 onInitialPassengerNameConsumed()
             }
     }

@@ -2,6 +2,9 @@ package com.example.vtsdaily3.feature_clinics.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +42,8 @@ import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 enum class ClinicSortMode {
     NAME,
@@ -51,8 +56,38 @@ fun ClinicsScreen() {
 
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
+    fun reloadClinics() {
         clinics = ClinicStore.load(context)
+    }
+
+    val importClinicsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) {
+            Log.d("ClinicsImport", "Import cancelled")
+            return@rememberLauncherForActivityResult
+        }
+
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+        }
+
+        try {
+            val imported = parseClinicsCsv(context, uri)
+            ClinicStore.save(context, imported)
+            reloadClinics()
+            Log.d("ClinicsImport", "Imported ${imported.size} clinics")
+        } catch (e: Exception) {
+            Log.e("ClinicsImport", "Import failed", e)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        reloadClinics()
     }
 
     ClinicsScreenContent(
@@ -67,6 +102,9 @@ fun ClinicsScreen() {
                 data = Uri.parse("tel:$cleanedPhone")
             }
             context.startActivity(intent)
+        },
+        onImportClinics = {
+            importClinicsLauncher.launch(arrayOf("*/*"))
         }
     )
 }
@@ -75,7 +113,8 @@ fun ClinicsScreen() {
 private fun ClinicsScreenContent(
     clinics: List<ClinicEntry>,
     onClinicsChange: (List<ClinicEntry>) -> Unit,
-    onCallClinic: (ClinicEntry) -> Unit
+    onCallClinic: (ClinicEntry) -> Unit,
+    onImportClinics: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(ClinicSortMode.NAME) }
@@ -212,6 +251,13 @@ private fun ClinicsScreenContent(
                         showAddDialog = true
                     }
                 )
+                DropdownMenuItem(
+                    text = { Text("Import Clinics") },
+                    onClick = {
+                        menuExpanded = false
+                        onImportClinics()
+                    }
+                )
             }
         },
         isListEmpty = filteredAndSortedClinics.isEmpty(),
@@ -313,16 +359,21 @@ private fun ClinicRowCard(
             density = VtsCardDensity.Compact
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(VtsSpacing.xs)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 VtsSummaryRow(
                     title = clinic.name,
-                    subtitle = clinic.phone
+                    subtitle = null // remove phone from here
                 )
 
                 VtsInfoRow(
-                    label = "Address",
+                    label = "",
                     value = clinic.address
+                )
+
+                VtsInfoRow(
+                    label = "",
+                    value = clinic.phone
                 )
             }
         }
@@ -441,4 +492,67 @@ private fun ClinicEditDialog(
             }
         }
     )
+}
+
+private fun parseClinicsCsv(
+    context: android.content.Context,
+    uri: Uri
+): List<ClinicEntry> {
+    val rows = mutableListOf<ClinicEntry>()
+
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        BufferedReader(InputStreamReader(inputStream)).use { reader ->
+            reader.lineSequence()
+                .drop(1) // skip header
+                .forEach { line ->
+                    val trimmed = line.trim()
+                    if (trimmed.isBlank()) return@forEach
+
+                    val parts = parseCsvLine(trimmed)
+                    if (parts.size < 3) return@forEach
+
+                    val name = parts[0].trim().trim('"')
+                    val address = parts[1].trim().trim('"')
+                    val phone = parts[2].trim().trim('"')
+
+                    if (name.isNotBlank()) {
+                        rows.add(
+                            ClinicEntry(
+                                name = name,
+                                address = address,
+                                phone = phone
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    return rows
+}
+
+private fun parseCsvLine(line: String): List<String> {
+    val result = mutableListOf<String>()
+    val current = StringBuilder()
+    var inQuotes = false
+
+    line.forEach { char ->
+        when (char) {
+            '"' -> {
+                inQuotes = !inQuotes
+            }
+            ',' -> {
+                if (inQuotes) {
+                    current.append(char)
+                } else {
+                    result.add(current.toString())
+                    current.clear()
+                }
+            }
+            else -> current.append(char)
+        }
+    }
+
+    result.add(current.toString())
+    return result
 }

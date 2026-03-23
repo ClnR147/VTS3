@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun VtsInfoRow(
@@ -15,10 +16,13 @@ fun VtsInfoRow(
     Row(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "$label: ",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        if (label.isNotBlank()) {
+            Text(
+                text = "$label: ",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
 
         Text(
             text = value,

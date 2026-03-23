@@ -1,6 +1,7 @@
 package com.example.vtsdaily3.feature_lookup.domain
 
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.util.normalizePassengerNameForLookup
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -49,7 +50,7 @@ fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
     return rows
         .mapNotNull { row ->
             row.passenger
-                ?.let(::lookupDisplayName)
+                ?.let(::normalizePassengerNameForLookup)
                 ?.takeIf { it.isNotBlank() }
         }
         .groupBy { it }
@@ -76,8 +77,7 @@ fun buildLookupPassengerDetail(
     val targetName = lookupDisplayName(passengerName)
 
     val matches = rows.filter { row ->
-        val rowName = row.passenger?.let(::lookupDisplayName).orEmpty()
-        rowName == targetName
+        normalizePassengerNameForLookup(row.passenger.orEmpty()) == targetName
     }
 
     if (matches.isEmpty()) return null
@@ -110,3 +110,4 @@ fun buildLookupPassengerDetail(
         dayGroups = dayGroups
     )
 }
+

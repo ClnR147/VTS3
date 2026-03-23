@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,9 +68,12 @@ import com.example.vtsdaily3.ui.theme.VtsWarning
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
+import com.example.vtsdaily3.feature_clinics.domain.resolveClinicPhoneForTrip
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
+import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
+import com.example.vtsdaily3.feature_clinics.data.ClinicStore
 
 
 @Composable
@@ -84,6 +88,8 @@ fun ScheduleScreen(
     onNextDate: () -> Unit,
     onLookupPassenger: (String) -> Unit
 ) {
+    val context = LocalContext.current
+
     val formattedSelectedDate = remember(uiState.selectedDate) {
         uiState.selectedDate.format(
             DateTimeFormatter.ofPattern("EEE, MMM d, yyyy")
@@ -91,6 +97,12 @@ fun ScheduleScreen(
     }
 
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
+
+    var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        clinics = ClinicStore.load(context)
+    }
 
     notesTrip?.let { selectedTrip ->
         PassengerNotesScreen(
@@ -158,6 +170,7 @@ fun ScheduleScreen(
                     ) { trip ->
                         TripCard(
                             trip = trip,
+                            clinics = clinics,
                             viewMode = uiState.selectedViewMode,
                             onTripActionSelected = { menuAction ->
                                 when (menuAction) {
@@ -194,6 +207,7 @@ fun ScheduleScreen(
 @Composable
 private fun TripCard(
     trip: Trip,
+    clinics: List<ClinicEntry>,
     viewMode: TripViewMode,
     onTripActionSelected: (TripMenuAction) -> Unit,
     onLookupPassenger: (String) -> Unit,
@@ -341,20 +355,35 @@ private fun TripCard(
                         }
                     }
                 }
-
+                val clinicPhone = resolveClinicPhoneForTrip(
+                    timeText = trip.time,          // adjust if your field name differs
+                    fromAddress = trip.fromAddress,
+                    toAddress = trip.toAddress,
+                    clinics = clinics              // you must already have this loaded
+                )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { /* clinic call will be implemented later */ },
-                        enabled = false,
+                        onClick = {
+                            clinicPhone?.let { phone ->
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:$phone")
+                                }
+                                context.startActivity(intent)
+                            }
+                        },
+                        enabled = clinicPhone != null,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Phone,
-                            contentDescription = "Call Clinic (future)",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            contentDescription = "Call Clinic",
+                            tint = if (clinicPhone != null)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }

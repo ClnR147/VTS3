@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -74,6 +75,11 @@ import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
 import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
 import com.example.vtsdaily3.feature_clinics.data.ClinicStore
+import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
+import com.example.vtsdaily3.feature_schedule.domain.ScheduleWarning
+import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 
 
 @Composable
@@ -112,6 +118,18 @@ fun ScheduleScreen(
         )
         return
     }
+
+    LaunchedEffect(uiState.tripsForSelectedView, clinics) {
+        val warnings = buildScheduleWarnings(
+            trips = uiState.tripsForSelectedView,
+            clinics = clinics
+        )
+
+        warnings.forEach { warning ->
+            Log.d("ScheduleWarning", "${warning.tripId}: ${warning.message}")
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -197,6 +215,7 @@ fun ScheduleScreen(
                                 notesTrip = selectedTrip
                             },
                         )
+
                     }
                 }
             }
@@ -218,6 +237,7 @@ private fun TripCard(
  {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
+    var showAddressChooser by remember { mutableStateOf(false) }
     val toAddress = trip.toAddress.trim()
     val nameStartOffset = 150.dp
 
@@ -294,7 +314,7 @@ private fun TripCard(
                 value = trip.fromAddress,
                 expanded = expanded,
                 onClick = { launchWaze(context, trip.fromAddress) },
-                onLongClick = { launchWaze(context, trip.fromAddress) }
+                onLongClick = { showAddressChooser = true }
             )
 
             if (toAddress.isNotBlank()) {
@@ -304,7 +324,7 @@ private fun TripCard(
                     value = toAddress,
                     expanded = expanded,
                     onClick = { launchWaze(context, toAddress) },
-                    onLongClick = { launchWaze(context, toAddress) }
+                    onLongClick = { showAddressChooser = true }
                 )
             }
 
@@ -419,6 +439,104 @@ private fun TripCard(
                 }
 
             }
+        }
+        if (showAddressChooser) {
+            AlertDialog(
+                onDismissRequest = { showAddressChooser = false },
+                title = {
+                    Text(
+                        text = "Navigate",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        if (trip.fromAddress.isNotBlank()) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showAddressChooser = false
+                                        launchWaze(context, trip.fromAddress)
+                                    },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = LightGreenCardBackground
+                                ),
+                                border = BorderStroke(.5.dp, VtsGreen)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Pickup",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = VtsGreen,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        text = trip.fromAddress,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+
+                        if (toAddress.isNotBlank()) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showAddressChooser = false
+                                        launchWaze(context, toAddress)
+                                    },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = LightGreenCardBackground
+                                ),
+                                border = BorderStroke(.5.dp, VtsGreen)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Drop-off",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = VtsGreen,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        text = toAddress,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(
+                        onClick = { showAddressChooser = false }
+                    ) {
+                        Text("Cancel", color = VtsGreen)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(20.dp)
+            )
         }
     }
 }
@@ -710,3 +828,57 @@ private fun TripStatus.otherLabelV3(): String = when (this) {
     else -> ""
 }
 
+fun buildScheduleWarnings(
+    trips: List<Trip>,
+    clinics: List<ClinicEntry>
+): List<ScheduleWarning> {
+
+    val warnings = mutableListOf<ScheduleWarning>()
+
+    trips.forEach { trip ->
+
+        val time = trip.time
+
+        val isPA = time.contains("PA", ignoreCase = true)
+        val isPR = time.contains("PR", ignoreCase = true)
+
+        // 1) Missing PA/PR
+        if (!isPA && !isPR) {
+            warnings += ScheduleWarning(
+                tripId = trip.id,
+                message = "Missing PA/PR"
+            )
+        }
+
+        // 2) Clinic mismatch
+        if (isPA) {
+            val clinic = findMatchingClinic(trip.toAddress, clinics)
+            if (clinic == null) {
+                warnings += ScheduleWarning(
+                    tripId = trip.id,
+                    message = "PA trip but TO is not a known clinic"
+                )
+            }
+        }
+
+        if (isPR) {
+            val clinic = findMatchingClinic(trip.fromAddress, clinics)
+            if (clinic == null) {
+                warnings += ScheduleWarning(
+                    tripId = trip.id,
+                    message = "PR trip but FROM is not a known clinic"
+                )
+            }
+        }
+
+        // 3) Missing phone
+        if (trip.phone.isBlank()) {
+            warnings += ScheduleWarning(
+                tripId = trip.id,
+                message = "Missing passenger phone"
+            )
+        }
+    }
+
+    return warnings
+}

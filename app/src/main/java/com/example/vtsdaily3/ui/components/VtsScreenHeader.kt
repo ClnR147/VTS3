@@ -34,7 +34,7 @@ fun VtsScreenHeader(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = VtsGreen
         )
 
         if (!subtitle.isNullOrBlank()) {

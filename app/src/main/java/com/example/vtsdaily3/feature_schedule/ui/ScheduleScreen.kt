@@ -1,5 +1,7 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
+import android.R.attr.background
+import android.R.id.background
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -73,6 +75,7 @@ import com.example.vtsdaily3.feature_clinics.domain.resolveClinicPhoneForTrip
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
+import com.example.vtsdaily3.ui.theme.SubtleGrey
 import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
 import com.example.vtsdaily3.feature_clinics.data.ClinicStore
 import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
@@ -80,6 +83,8 @@ import com.example.vtsdaily3.feature_schedule.domain.ScheduleWarning
 import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
+import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
+import com.example.vtsdaily3.ui.theme.OnSurfaceText
 
 
 @Composable
@@ -145,7 +150,8 @@ fun ScheduleScreen(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = VtsGreen
+            //* color = MaterialTheme.colorScheme.onBackground *//
         )
 
         ScheduleHeaderCard(
@@ -216,6 +222,8 @@ fun ScheduleScreen(
                             },
                         )
 
+                        Spacer(Modifier.height(9.dp))
+                        VtsThinDivider()
                     }
                 }
             }
@@ -240,7 +248,7 @@ private fun TripCard(
     var showAddressChooser by remember { mutableStateOf(false) }
     val toAddress = trip.toAddress.trim()
     val nameStartOffset = 150.dp
-
+    var showPassengerDialog by remember { mutableStateOf(false) }
     val statusColor = when (viewMode) {
         TripViewMode.ACTIVE -> ActiveColor
         TripViewMode.COMPLETED -> CompletedColor
@@ -251,7 +259,7 @@ private fun TripCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = SubtleGrey,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         border = BorderStroke(
@@ -303,11 +311,59 @@ private fun TripCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showPassengerDialog = true }
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            if (showPassengerDialog) {
+                val phone = trip.phone.trim()
+
+                AlertDialog(
+                    onDismissRequest = { showPassengerDialog = false },
+                    title = {
+                        Text(
+                            text = trip.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    },
+                    text = {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = if (phone.isNotBlank()) phone else "No phone number available",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        if (phone.isNotBlank()) {
+                            Button(
+                                onClick = {
+                                    showPassengerDialog = false
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                    )
+                                }
+                            ) {
+                                Text("Call")
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showPassengerDialog = false }
+                        ) {
+                            Text("Close")
+                        }
+                    }
+                )
+            }
+
+             Spacer(Modifier.height(10.dp))
 
             ClickableAlignedLineV3(
                 label = "From:",
@@ -318,7 +374,7 @@ private fun TripCard(
             )
 
             if (toAddress.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(2.dp))
                 ClickableAlignedLineV3(
                     label = "To:",
                     value = toAddress,
@@ -440,6 +496,8 @@ private fun TripCard(
 
             }
         }
+        Spacer(Modifier.height(2.dp))
+
         if (showAddressChooser) {
             AlertDialog(
                 onDismissRequest = { showAddressChooser = false },
@@ -590,7 +648,7 @@ fun ScheduleHeaderCard(
         colors = CardDefaults.cardColors(
             containerColor = LightGreenCardBackground
         ),
-        border = BorderStroke(.5.dp, VtsGreen),
+        border = BorderStroke(1.0.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
         defaultElevation = 4.dp
         )

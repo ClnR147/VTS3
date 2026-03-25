@@ -1,7 +1,5 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
-import android.R.attr.background
-import android.R.id.background
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -9,9 +7,11 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,9 +61,7 @@ import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
 import com.example.vtsdaily3.model.TripViewMode
 import com.example.vtsdaily3.ui.theme.ActionGreen
-import com.example.vtsdaily3.ui.theme.ActiveColor
 import com.example.vtsdaily3.ui.theme.CardHighlight
-import com.example.vtsdaily3.ui.theme.CompletedColor
 import com.example.vtsdaily3.ui.theme.FromGrey
 import com.example.vtsdaily3.ui.theme.RemovedColor
 import com.example.vtsdaily3.ui.theme.VtsError
@@ -71,7 +69,6 @@ import com.example.vtsdaily3.ui.theme.VtsWarning
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.core.net.toUri
-import com.example.vtsdaily3.feature_clinics.domain.resolveClinicPhoneForTrip
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesScreen
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
@@ -82,9 +79,10 @@ import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
 import com.example.vtsdaily3.feature_schedule.domain.ScheduleWarning
 import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
-import com.example.vtsdaily3.ui.theme.OnSurfaceText
 
 
 @Composable
@@ -108,7 +106,8 @@ fun ScheduleScreen(
     }
 
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
-
+    var pendingClinicAddress by remember { mutableStateOf("") }
+    var showAddClinicDialog by remember { mutableStateOf(false) }
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
 
     LaunchedEffect(Unit) {
@@ -220,15 +219,121 @@ fun ScheduleScreen(
                             onPassengerNotes = { selectedTrip ->
                                 notesTrip = selectedTrip
                             },
+                            onAddClinicRequested = { clinicAddress ->
+                                if (clinicAddress.isNotBlank()) {
+                                    pendingClinicAddress = clinicAddress
+                                    showAddClinicDialog = true
+                                }
+                            }
                         )
 
                         Spacer(Modifier.height(9.dp))
                         VtsThinDivider()
                     }
                 }
+
+                if (showAddClinicDialog) {
+                    AddClinicDialog(
+                        initialAddress = pendingClinicAddress,
+                        onDismiss = {
+                            showAddClinicDialog = false
+                            pendingClinicAddress = ""
+                        },
+                        onSave = { newClinic ->
+                            val updatedClinics = clinics + newClinic
+                            ClinicStore.save(context, updatedClinics)
+                            clinics = ClinicStore.load(context)
+                            showAddClinicDialog = false
+                            pendingClinicAddress = ""
+                            Toast.makeText(
+                                context,
+                                "Clinic added",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun AddClinicDialog(
+    initialAddress: String,
+    onDismiss: () -> Unit,
+    onSave: (ClinicEntry) -> Unit
+) {
+    var clinicName by remember { mutableStateOf("") }
+    var clinicAddress by remember(initialAddress) { mutableStateOf(initialAddress) }
+    var clinicPhone by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Add Clinic",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = clinicName,
+                    onValueChange = { clinicName = it },
+                    label = { Text("Clinic Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = clinicAddress,
+                    onValueChange = { clinicAddress = it },
+                    label = { Text("Address") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = clinicPhone,
+                    onValueChange = { clinicPhone = it },
+                    label = { Text("Phone") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val trimmedName = clinicName.trim()
+                    val trimmedAddress = clinicAddress.trim()
+                    val trimmedPhone = clinicPhone.trim()
+
+                    if (trimmedName.isNotBlank() && trimmedAddress.isNotBlank()) {
+                        onSave(
+                            ClinicEntry(
+                                name = trimmedName,
+                                address = trimmedAddress,
+                                phone = trimmedPhone
+                            )
+                        )
+                    }
+                }
+            ) {
+                Text("Save", color = VtsGreen)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = VtsGreen)
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(20.dp)
+    )
 }
 
 
@@ -240,20 +345,34 @@ private fun TripCard(
     onTripActionSelected: (TripMenuAction) -> Unit,
     onLookupPassenger: (String) -> Unit,
     onPassengerNotes: (Trip) -> Unit,
+    onAddClinicRequested: (String) -> Unit,
     modifier: Modifier = Modifier
-)
- {
+) {
     val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     var showAddressChooser by remember { mutableStateOf(false) }
+    var showPassengerDialog by remember { mutableStateOf(false) }
+
     val toAddress = trip.toAddress.trim()
     val nameStartOffset = 150.dp
-    var showPassengerDialog by remember { mutableStateOf(false) }
-    val statusColor = when (viewMode) {
-        TripViewMode.ACTIVE -> ActiveColor
-        TripViewMode.COMPLETED -> CompletedColor
-        TripViewMode.OTHER -> RemovedColor
-    }
+
+    val clinicAddress = resolveClinicCandidateAddress(
+        timeText = trip.time,
+        fromAddress = trip.fromAddress,
+        toAddress = trip.toAddress
+    )
+
+    val matchedClinic = findMatchingClinic(
+        address = clinicAddress,
+        clinics = clinics
+    )
+
+    val clinicPhone = matchedClinic?.phone?.trim()?.takeIf { it.isNotBlank() }
+
+    val isPA = trip.time.contains("PA", ignoreCase = true)
+    val isPR = trip.time.contains("PR", ignoreCase = true)
+    val shouldHaveClinic = isPA || isPR
+    val isMissingClinic = shouldHaveClinic && matchedClinic == null
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -345,7 +464,7 @@ private fun TripCard(
                                 onClick = {
                                     showPassengerDialog = false
                                     context.startActivity(
-                                        Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                        Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
                                     )
                                 }
                             ) {
@@ -363,7 +482,7 @@ private fun TripCard(
                 )
             }
 
-             Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
 
             ClickableAlignedLineV3(
                 label = "From:",
@@ -432,43 +551,72 @@ private fun TripCard(
                         }
                     }
                 }
-                val clinicPhone = resolveClinicPhoneForTrip(
-                    timeText = trip.time,          // adjust if your field name differs
-                    fromAddress = trip.fromAddress,
-                    toAddress = trip.toAddress,
-                    clinics = clinics              // you must already have this loaded
-                )
+
+                val clinicInteractionSource = remember { MutableInteractionSource() }
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            clinicPhone?.let { phone ->
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:$phone")
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .combinedClickable(
+                                interactionSource = clinicInteractionSource,
+                                indication = LocalIndication.current,
+                                enabled = clinicPhone != null || isMissingClinic,
+                                onClick = {
+                                    when {
+                                        clinicPhone != null -> {
+                                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                data = "tel:$clinicPhone".toUri()
+                                            }
+                                            context.startActivity(intent)
+                                        }
+                                        isMissingClinic -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Clinic not found in database",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                },
+                                onLongClick = {
+                                    when {
+                                        clinicPhone != null -> {
+                                            matchedClinic?.let { clinic ->
+                                                Toast.makeText(
+                                                    context,
+                                                    clinic.name,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                        isMissingClinic -> {
+                                            if (clinicAddress.isNotBlank()) {
+                                                onAddClinicRequested(clinicAddress)
+                                            }
+                                        }
+                                    }
                                 }
-                                context.startActivity(intent)
-                            }
-                        },
-                        enabled = clinicPhone != null,
-                        modifier = Modifier.size(32.dp)
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Phone,
                             contentDescription = "Call Clinic",
-                            tint = if (clinicPhone != null)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = when {
+                                clinicPhone != null -> MaterialTheme.colorScheme.primary
+                                isMissingClinic -> VtsError
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                             modifier = Modifier.size(18.dp)
                         )
                     }
 
                     IconButton(
-                        onClick = {
-                            onLookupPassenger(trip.name)
-                        },
+                        onClick = { onLookupPassenger(trip.name) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -480,9 +628,7 @@ private fun TripCard(
                     }
 
                     IconButton(
-                        onClick = {
-                            onPassengerNotes(trip)
-                        },
+                        onClick = { onPassengerNotes(trip) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -493,9 +639,9 @@ private fun TripCard(
                         )
                     }
                 }
-
             }
         }
+
         Spacer(Modifier.height(2.dp))
 
         if (showAddressChooser) {
@@ -514,7 +660,6 @@ private fun TripCard(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
                         if (trip.fromAddress.isNotBlank()) {
                             Card(
                                 modifier = Modifier
@@ -529,9 +674,7 @@ private fun TripCard(
                                 ),
                                 border = BorderStroke(.5.dp, VtsGreen)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp)
-                                ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = "Pickup",
                                         style = MaterialTheme.typography.labelMedium,
@@ -563,9 +706,7 @@ private fun TripCard(
                                 ),
                                 border = BorderStroke(.5.dp, VtsGreen)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp)
-                                ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = "Drop-off",
                                         style = MaterialTheme.typography.labelMedium,

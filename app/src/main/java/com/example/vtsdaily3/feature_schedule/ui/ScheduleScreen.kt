@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -105,6 +106,7 @@ fun ScheduleScreen(
         )
     }
 
+    var showDatePickerDialog by remember { mutableStateOf(false) }
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
     var pendingClinicAddress by remember { mutableStateOf("") }
     var showAddClinicDialog by remember { mutableStateOf(false) }
@@ -134,7 +136,6 @@ fun ScheduleScreen(
         }
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -150,11 +151,9 @@ fun ScheduleScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold,
             color = VtsGreen
-            //* color = MaterialTheme.colorScheme.onBackground *//
         )
 
         ScheduleHeaderCard(
-            modifier = Modifier.padding(horizontal = 7.dp),
             selectedDateText = formattedSelectedDate,
             selectedViewMode = uiState.selectedViewMode,
             activeCount = uiState.activeCount,
@@ -162,6 +161,7 @@ fun ScheduleScreen(
             otherCount = uiState.otherCount,
             onPreviousDate = onPreviousDate,
             onNextDate = onNextDate,
+            onDateClick = { showDatePickerDialog = true },
             onSelectViewMode = onSelectViewMode
         )
 
@@ -231,31 +231,111 @@ fun ScheduleScreen(
                         VtsThinDivider()
                     }
                 }
-
-                if (showAddClinicDialog) {
-                    AddClinicDialog(
-                        initialAddress = pendingClinicAddress,
-                        onDismiss = {
-                            showAddClinicDialog = false
-                            pendingClinicAddress = ""
-                        },
-                        onSave = { newClinic ->
-                            val updatedClinics = clinics + newClinic
-                            ClinicStore.save(context, updatedClinics)
-                            clinics = ClinicStore.load(context)
-                            showAddClinicDialog = false
-                            pendingClinicAddress = ""
-                            Toast.makeText(
-                                context,
-                                "Clinic added",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
-                }
             }
         }
     }
+
+    if (showDatePickerDialog) {
+        ActiveDatePickerDialog(
+            availableDates = uiState.availableDates,
+            selectedDate = uiState.selectedDate,
+            onDismiss = { showDatePickerDialog = false },
+            onDateSelected = { selectedDate ->
+                showDatePickerDialog = false
+                onSelectDate(selectedDate)
+            }
+        )
+    }
+
+    if (showAddClinicDialog) {
+        AddClinicDialog(
+            initialAddress = pendingClinicAddress,
+            onDismiss = {
+                showAddClinicDialog = false
+                pendingClinicAddress = ""
+            },
+            onSave = { newClinic ->
+                val updatedClinics = clinics + newClinic
+                ClinicStore.save(context, updatedClinics)
+                clinics = ClinicStore.load(context)
+                showAddClinicDialog = false
+                pendingClinicAddress = ""
+                Toast.makeText(
+                    context,
+                    "Clinic added",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
+    }
+}
+
+@Composable
+private fun ActiveDatePickerDialog(
+    availableDates: List<LocalDate>,
+    selectedDate: LocalDate,
+    onDismiss: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val formatter = remember { DateTimeFormatter.ofPattern("EEE, MMM d, yyyy") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Select Schedule Date",
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 360.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(availableDates.sortedDescending()) { date ->
+                    val isSelected = date == selectedDate
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onDateSelected(date) },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) {
+                                LightGreenCardBackground
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        ),
+                        border = BorderStroke(
+                            width = if (isSelected) 1.dp else 0.5.dp,
+                            color = if (isSelected) {
+                                VtsGreen
+                            } else {
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                            }
+                        )
+                    ) {
+                        Text(
+                            text = date.format(formatter),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = VtsGreen)
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(20.dp)
+    )
 }
 
 @Composable
@@ -335,7 +415,6 @@ private fun AddClinicDialog(
         shape = RoundedCornerShape(20.dp)
     )
 }
-
 
 @Composable
 private fun TripCard(
@@ -740,7 +819,6 @@ private fun TripCard(
     }
 }
 
-
 @Composable
 private fun EmptyScheduleState(
     viewMode: TripViewMode,
@@ -780,6 +858,7 @@ fun ScheduleHeaderCard(
     otherCount: Int,
     onPreviousDate: () -> Unit,
     onNextDate: () -> Unit,
+    onDateClick: () -> Unit,
     onSelectViewMode: (TripViewMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -791,14 +870,13 @@ fun ScheduleHeaderCard(
         ),
         border = BorderStroke(1.0.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
-        defaultElevation = 4.dp
+            defaultElevation = 4.dp
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 8.dp)
-
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -815,10 +893,11 @@ fun ScheduleHeaderCard(
                     text = selectedDateText,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 12.dp),
+                        .clickable { onDateClick() },
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 IconButton(onClick = onNextDate) {
@@ -859,7 +938,6 @@ fun ScheduleHeaderCard(
         }
     }
 }
-
 
 @Composable
 fun ViewModeButton(
@@ -1000,7 +1078,6 @@ private fun launchWaze(context: Context, address: String) {
     if (q.isBlank()) return
 
     fun start(intent: Intent): Boolean {
-        // if we ever get an application context, make it safe
         if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         return try {
@@ -1011,15 +1088,11 @@ private fun launchWaze(context: Context, address: String) {
         }
     }
 
-    // 1) Try Waze native scheme (some builds support it)
     if (start(Intent(Intent.ACTION_VIEW, "waze://?q=$q".toUri()))) return
-
-    // 2) Try https deep link WITHOUT forcing package (lets Android pick Waze)
     if (start(Intent(Intent.ACTION_VIEW, "https://waze.com/ul?q=$q".toUri()))) return
-
-    // 3) Last resort: geo: (often still offers Waze)
     start(Intent(Intent.ACTION_VIEW, "geo:0,0?q=$q".toUri()))
 }
+
 private fun TripStatus.otherLabelV3(): String = when (this) {
     TripStatus.CANCELLED -> "CANCEL"
     TripStatus.NOSHOW -> "NO SHOW"
@@ -1031,17 +1104,14 @@ fun buildScheduleWarnings(
     trips: List<Trip>,
     clinics: List<ClinicEntry>
 ): List<ScheduleWarning> {
-
     val warnings = mutableListOf<ScheduleWarning>()
 
     trips.forEach { trip ->
-
         val time = trip.time
 
         val isPA = time.contains("PA", ignoreCase = true)
         val isPR = time.contains("PR", ignoreCase = true)
 
-        // 1) Missing PA/PR
         if (!isPA && !isPR) {
             warnings += ScheduleWarning(
                 tripId = trip.id,
@@ -1049,7 +1119,6 @@ fun buildScheduleWarnings(
             )
         }
 
-        // 2) Clinic mismatch
         if (isPA) {
             val clinic = findMatchingClinic(trip.toAddress, clinics)
             if (clinic == null) {
@@ -1070,7 +1139,6 @@ fun buildScheduleWarnings(
             }
         }
 
-        // 3) Missing phone
         if (trip.phone.isBlank()) {
             warnings += ScheduleWarning(
                 tripId = trip.id,

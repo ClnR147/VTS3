@@ -5,4 +5,5 @@ import java.time.LocalDate
 interface ScheduleFileCatalog {
     suspend fun getAvailableScheduleFiles(): List<ScheduleFileRef>
     suspend fun findScheduleFile(date: LocalDate): ScheduleFileRef?
+    suspend fun refresh()
 }

@@ -10,8 +10,18 @@ class ScheduleRepositoryImpl(
     private val statusStore: TripStatusStore
 ) : ScheduleRepository {
 
+    private var cachedAvailableDates: List<LocalDate>? = null
+
+    private suspend fun getCachedAvailableDates(): List<LocalDate> {
+        cachedAvailableDates?.let { return it }
+
+        val dates = loader.getAvailableDates().sorted()
+        cachedAvailableDates = dates
+        return dates
+    }
+
     override suspend fun getAvailableDates(): List<LocalDate> {
-        return loader.getAvailableDates()
+        return getCachedAvailableDates()
     }
 
     override suspend fun loadSchedule(date: LocalDate): DailySchedule {
@@ -30,7 +40,7 @@ class ScheduleRepositoryImpl(
             )
         }
 
-        val availableDates = loader.getAvailableDates()
+        val availableDates = getCachedAvailableDates()
 
         return DailySchedule(
             date = date,
@@ -52,5 +62,9 @@ class ScheduleRepositoryImpl(
         tripId: TripId
     ) {
         statusStore.clearStatus(date, tripId)
+    }
+
+    override suspend fun refreshCatalog() {
+        cachedAvailableDates = loader.getAvailableDates().sorted()
     }
 }

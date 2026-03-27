@@ -7,19 +7,9 @@ import java.time.LocalDate
 
 
 interface ScheduleRepository {
-
     suspend fun getAvailableDates(): List<LocalDate>
-
     suspend fun loadSchedule(date: LocalDate): DailySchedule
-
-    suspend fun setTripStatus(
-        date: LocalDate,
-        tripId: TripId,
-        status: TripStatus
-    )
-
-    suspend fun clearTripStatus(
-        date: LocalDate,
-        tripId: TripId
-    )
+    suspend fun setTripStatus(date: LocalDate, tripId: TripId, status: TripStatus)
+    suspend fun clearTripStatus(date: LocalDate, tripId: TripId)
+    suspend fun refreshCatalog()
 }

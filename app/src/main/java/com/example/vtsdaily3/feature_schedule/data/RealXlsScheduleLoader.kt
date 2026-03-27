@@ -20,4 +20,8 @@ class RealXlsScheduleLoader(
         val fileRef = fileCatalog.findScheduleFile(date) ?: return emptyList()
         return tripParser.parse(fileRef)
     }
+
+    override suspend fun refresh() {
+        fileCatalog.refresh()
+    }
 }

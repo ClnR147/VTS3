@@ -11,7 +11,14 @@ class AndroidScheduleFileCatalog(
     private val folderProvider: ScheduleFolderProvider
 ) : ScheduleFileCatalog {
 
+    private var cachedFiles: List<ScheduleFileRef>? = null
+
     override suspend fun getAvailableScheduleFiles(): List<ScheduleFileRef> {
+        cachedFiles?.let { cached ->
+            Log.d("ScheduleCatalog", "Returning cached schedule list. Count = ${cached.size}")
+            return cached
+        }
+
         val folderUriString = folderProvider.getScheduleFolderUriString()
         Log.d("ScheduleCatalog", "Saved folder URI = $folderUriString")
 
@@ -36,6 +43,7 @@ class AndroidScheduleFileCatalog(
         }
 
         val results = folder.listFiles()
+            .asSequence()
             .filter { it.isFile }
             .mapNotNull { file ->
                 val name = file.name
@@ -55,13 +63,20 @@ class AndroidScheduleFileCatalog(
                 )
             }
             .sortedBy { it.date }
+            .toList()
 
         Log.d("ScheduleCatalog", "Available schedule count = ${results.size}")
 
+        cachedFiles = results
         return results
     }
 
     override suspend fun findScheduleFile(date: LocalDate): ScheduleFileRef? {
         return getAvailableScheduleFiles().firstOrNull { it.date == date }
+    }
+
+    override suspend fun refresh() {
+        Log.d("ScheduleCatalog", "Refreshing schedule file cache")
+        cachedFiles = null
     }
 }

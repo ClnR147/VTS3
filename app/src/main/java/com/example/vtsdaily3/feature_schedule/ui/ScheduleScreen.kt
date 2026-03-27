@@ -453,6 +453,41 @@ private fun TripCard(
     val shouldHaveClinic = isPA || isPR
     val isMissingClinic = shouldHaveClinic && matchedClinic == null
 
+
+    val expectedClinicAddress = resolveClinicCandidateAddress(
+        timeText = trip.time,
+        fromAddress = trip.fromAddress,
+        toAddress = trip.toAddress
+    )
+
+    val expectedClinicMatch = findMatchingClinic(
+        address = expectedClinicAddress,
+        clinics = clinics
+    )
+
+    val oppositeClinicAddress = when {
+        isPR -> trip.toAddress
+        isPA -> trip.fromAddress
+        else -> ""
+    }
+
+    val oppositeClinicMatch = if (
+        shouldHaveClinic &&
+        expectedClinicMatch == null &&
+        oppositeClinicAddress.isNotBlank()
+    ) {
+        findMatchingClinic(
+            address = oppositeClinicAddress,
+            clinics = clinics
+        )
+    } else {
+        null
+    }
+
+    val effectiveClinic = expectedClinicMatch ?: oppositeClinicMatch
+    val isDirectionMismatch = expectedClinicMatch == null && oppositeClinicMatch != null
+
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -664,7 +699,7 @@ private fun TripCard(
                                 onLongClick = {
                                     when {
                                         clinicPhone != null -> {
-                                            matchedClinic?.let { clinic ->
+                                            effectiveClinic?.let { clinic ->
                                                 Toast.makeText(
                                                     context,
                                                     clinic.name,
@@ -673,13 +708,21 @@ private fun TripCard(
                                             }
                                         }
                                         isMissingClinic -> {
-                                            if (clinicAddress.isNotBlank()) {
-                                                onAddClinicRequested(clinicAddress)
+                                            val suggestedAddress = when {
+                                                isPR -> trip.fromAddress
+                                                isPA -> trip.toAddress
+                                                else -> ""
+                                            }
+
+                                            if (suggestedAddress.isNotBlank()) {
+                                                onAddClinicRequested(suggestedAddress)
                                             }
                                         }
                                     }
                                 }
+
                             ),
+
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -722,6 +765,14 @@ private fun TripCard(
         }
 
         Spacer(Modifier.height(2.dp))
+
+        if (isDirectionMismatch) {
+            Log.d(
+                "ClinicMatch",
+                "Direction mismatch: trip='${trip.name}', time='${trip.time}', " +
+                        "expectedSide='${expectedClinicAddress}', oppositeSideMatched='${oppositeClinicMatch?.name}'"
+            )
+        }
 
         if (showAddressChooser) {
             AlertDialog(
@@ -1120,25 +1171,46 @@ fun buildScheduleWarnings(
         }
 
         if (isPA) {
-            val clinic = findMatchingClinic(trip.toAddress, clinics)
-            if (clinic == null) {
-                warnings += ScheduleWarning(
-                    tripId = trip.id,
-                    message = "PA trip but TO is not a known clinic"
-                )
+            val expectedClinic = findMatchingClinic(trip.toAddress, clinics)
+            val oppositeClinic = findMatchingClinic(trip.fromAddress, clinics)
+
+            when {
+                expectedClinic != null -> Unit
+                oppositeClinic != null -> {
+                    warnings += ScheduleWarning(
+                        tripId = trip.id,
+                        message = "PA trip appears to have clinic on FROM side"
+                    )
+                }
+                else -> {
+                    warnings += ScheduleWarning(
+                        tripId = trip.id,
+                        message = "PA trip but TO is not a known clinic"
+                    )
+                }
             }
         }
 
         if (isPR) {
-            val clinic = findMatchingClinic(trip.fromAddress, clinics)
-            if (clinic == null) {
-                warnings += ScheduleWarning(
-                    tripId = trip.id,
-                    message = "PR trip but FROM is not a known clinic"
-                )
+            val expectedClinic = findMatchingClinic(trip.fromAddress, clinics)
+            val oppositeClinic = findMatchingClinic(trip.toAddress, clinics)
+
+            when {
+                expectedClinic != null -> Unit
+                oppositeClinic != null -> {
+                    warnings += ScheduleWarning(
+                        tripId = trip.id,
+                        message = "PR trip appears to have clinic on TO side"
+                    )
+                }
+                else -> {
+                    warnings += ScheduleWarning(
+                        tripId = trip.id,
+                        message = "PR trip but FROM is not a known clinic"
+                    )
+                }
             }
         }
-
         if (trip.phone.isBlank()) {
             warnings += ScheduleWarning(
                 tripId = trip.id,

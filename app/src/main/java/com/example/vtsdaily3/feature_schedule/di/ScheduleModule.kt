@@ -25,6 +25,9 @@ object ScheduleModule {
             statusStore = JsonTripStatusStore(appContext)
         )
 
-        return ScheduleViewModelFactory(repository)
+        return ScheduleViewModelFactory(
+            repository = repository,
+            appContext = context.applicationContext
+        )
     }
 }

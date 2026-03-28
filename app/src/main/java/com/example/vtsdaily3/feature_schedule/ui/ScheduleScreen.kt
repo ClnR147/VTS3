@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Phone
@@ -83,7 +84,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
+
 
 
 @Composable
@@ -96,7 +100,8 @@ fun ScheduleScreen(
     onRefresh: () -> Unit,
     onPreviousDate: () -> Unit,
     onNextDate: () -> Unit,
-    onLookupPassenger: (String) -> Unit
+    onLookupPassenger: (String) -> Unit,
+    onInsertTrip: (Trip) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -111,9 +116,14 @@ fun ScheduleScreen(
     var pendingClinicAddress by remember { mutableStateOf("") }
     var showAddClinicDialog by remember { mutableStateOf(false) }
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
+    var showInsertDialog by remember { mutableStateOf(false) }
+    var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
+
+
 
     LaunchedEffect(Unit) {
         clinics = ClinicStore.load(context)
+        lookupRows = LookupStore.load(context)
     }
 
     notesTrip?.let { selectedTrip ->
@@ -194,6 +204,7 @@ fun ScheduleScreen(
                     ) { trip ->
                         TripCard(
                             trip = trip,
+                            selectedDate = uiState.selectedDate,
                             clinics = clinics,
                             viewMode = uiState.selectedViewMode,
                             onTripActionSelected = { menuAction ->
@@ -224,6 +235,9 @@ fun ScheduleScreen(
                                     pendingClinicAddress = clinicAddress
                                     showAddClinicDialog = true
                                 }
+                            },
+                            onAddTripRequested = {
+                                showInsertDialog = true
                             }
                         )
 
@@ -265,6 +279,19 @@ fun ScheduleScreen(
                     "Clinic added",
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+        )
+    }
+
+    if (showInsertDialog) {
+        InsertTripDialog(
+            lookupRows = lookupRows,
+            selectedDate = uiState.selectedDate,
+            onDismiss = { showInsertDialog = false },
+            onSave = { newTrip ->
+                Log.d("INSERT_DEBUG", "Calling onInsertTrip with: $newTrip")
+                onInsertTrip(newTrip)
+                showInsertDialog = false
             }
         )
     }
@@ -419,12 +446,14 @@ private fun AddClinicDialog(
 @Composable
 private fun TripCard(
     trip: Trip,
+    selectedDate: LocalDate,
     clinics: List<ClinicEntry>,
     viewMode: TripViewMode,
     onTripActionSelected: (TripMenuAction) -> Unit,
     onLookupPassenger: (String) -> Unit,
     onPassengerNotes: (Trip) -> Unit,
     onAddClinicRequested: (String) -> Unit,
+    onAddTripRequested: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -452,7 +481,6 @@ private fun TripCard(
     val isPR = trip.time.contains("PR", ignoreCase = true)
     val shouldHaveClinic = isPA || isPR
     val isMissingClinic = shouldHaveClinic && matchedClinic == null
-
 
     val expectedClinicAddress = resolveClinicCandidateAddress(
         timeText = trip.time,
@@ -486,7 +514,6 @@ private fun TripCard(
 
     val effectiveClinic = expectedClinicMatch ?: oppositeClinicMatch
     val isDirectionMismatch = expectedClinicMatch == null && oppositeClinicMatch != null
-
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -722,7 +749,6 @@ private fun TripCard(
                                 }
 
                             ),
-
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -744,6 +770,21 @@ private fun TripCard(
                         Icon(
                             imageVector = Icons.Outlined.PersonSearch,
                             contentDescription = "Lookup Passenger",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
+                            onAddTripRequested()
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AddCircleOutline,
+                            contentDescription = "Add Trip",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
@@ -1211,6 +1252,7 @@ fun buildScheduleWarnings(
                 }
             }
         }
+
         if (trip.phone.isBlank()) {
             warnings += ScheduleWarning(
                 tripId = trip.id,

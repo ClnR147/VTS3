@@ -87,7 +87,8 @@ fun ScheduleRoute(
                 onRefresh = viewModel::refreshCurrentDate,
                 onPreviousDate = viewModel::goToPreviousAvailableDate,
                 onNextDate = viewModel::goToNextAvailableDate,
-                onLookupPassenger = onLookupPassenger
+                onLookupPassenger = onLookupPassenger,
+                onInsertTrip = viewModel::insertTrip
             )
         }
     }

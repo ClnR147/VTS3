@@ -16,3 +16,4 @@ fun sortMinutes(raw: String): Int {
     val min = m.groupValues[2].toIntOrNull() ?: return Int.MAX_VALUE
     return h * 60 + min
 }
+

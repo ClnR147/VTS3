@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.content.edit
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.feature_lookup.domain.LookupPassengerDetail
 import com.example.vtsdaily3.feature_lookup.domain.LookupSummary
@@ -38,10 +39,13 @@ import com.example.vtsdaily3.ui.components.VtsSummaryRow
 import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.feature_lookup.ui.state.LookupUiState
 import com.example.vtsdaily3.feature_lookup.util.normalizePassengerNameForLookup
+import com.example.vtsdaily3.model.Trip
+import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.ui.components.VtsOverflowMenu
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryDetailCard
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
 import com.example.vtsdaily3.ui.components.directory.VtsInfoRow
+import java.time.LocalDate
 
 
 @Composable

@@ -1,27 +1,31 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.vtsdaily3.feature_schedule.data.InsertedTripStore
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepository
+import com.example.vtsdaily3.feature_schedule.data.TripStatusRecord
+import com.example.vtsdaily3.feature_schedule.data.TripStatusStore
 import com.example.vtsdaily3.feature_schedule.domain.DailySchedule
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiMapper
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiState
 import com.example.vtsdaily3.model.Trip
+import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
 import com.example.vtsdaily3.model.TripViewMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import com.example.vtsdaily3.model.TripId
-import kotlinx.coroutines.flow.asStateFlow
-import com.example.vtsdaily3.feature_schedule.data.InsertedTripStore
 
 class ScheduleViewModel(
+    private val appContext: Context,
     private val repository: ScheduleRepository,
-    private val appContext: Context
+    private val tripStatusStore: TripStatusStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
@@ -44,10 +48,8 @@ class ScheduleViewModel(
         selectedViewMode = viewMode
         val schedule = currentDailySchedule ?: return
 
-        val mergedSchedule = mergedScheduleWithInsertedTrips(schedule)
-
         _uiState.value = ScheduleUiMapper.map(
-            dailySchedule = mergedSchedule,
+            dailySchedule = schedule,
             selectedViewMode = selectedViewMode,
             isLoading = false,
             errorMessage = null
@@ -90,6 +92,10 @@ class ScheduleViewModel(
 
     fun markTripStatus(tripId: TripId, status: TripStatus) {
         viewModelScope.launch {
+            Log.d(
+                "TripStatusDebug",
+                "Saving status: date=${_uiState.value.selectedDate}, tripId=${tripId.value}, status=$status"
+            )
             try {
                 repository.setTripStatus(
                     date = _uiState.value.selectedDate,
@@ -122,39 +128,32 @@ class ScheduleViewModel(
     }
 
     fun insertTrip(trip: Trip) {
-
         val activeTrip = trip.copy(status = TripStatus.ACTIVE)
 
         InsertedTripStore.add(appContext, activeTrip)
-
-        reloadInsertedTripsForDate(activeTrip.date)
-
-        val schedule = currentDailySchedule
-        if (schedule == null) return
-
-
-        val mergedSchedule = mergedScheduleWithInsertedTrips(schedule)
-
-        _uiState.value = ScheduleUiMapper.map(
-            dailySchedule = mergedSchedule,
-            selectedViewMode = selectedViewMode,
-            isLoading = false,
-            errorMessage = null
-        )
-
-
+        refreshCurrentDate()
     }
 
     private fun reloadInsertedTripsForDate(date: LocalDate) {
         val loaded = InsertedTripStore.load(appContext, date)
-
         insertedTrips.clear()
         insertedTrips.addAll(loaded)
-
     }
 
-    private fun mergedScheduleWithInsertedTrips(schedule: DailySchedule): DailySchedule {
-        val insertedForDate = insertedTrips.filter { it.date == schedule.date }
+    private fun mergedScheduleWithInsertedTrips(
+        schedule: DailySchedule,
+        savedStatuses: List<TripStatusRecord>
+    ): DailySchedule {
+        val insertedForDate = insertedTrips
+            .filter { it.date == schedule.date }
+            .map { insertedTrip ->
+                val match = savedStatuses.firstOrNull { it.tripId == insertedTrip.id.value }
+                if (match != null) {
+                    insertedTrip.copy(status = match.status)
+                } else {
+                    insertedTrip
+                }
+            }
 
         return schedule.copy(
             trips = schedule.trips + insertedForDate
@@ -171,10 +170,16 @@ class ScheduleViewModel(
         viewModelScope.launch {
             try {
                 val dailySchedule = repository.loadSchedule(date)
-                currentDailySchedule = dailySchedule
 
                 reloadInsertedTripsForDate(date)
-                val mergedSchedule = mergedScheduleWithInsertedTrips(dailySchedule)
+
+                val savedStatuses = tripStatusStore.loadStatuses(date)
+                val mergedSchedule = mergedScheduleWithInsertedTrips(
+                    schedule = dailySchedule,
+                    savedStatuses = savedStatuses
+                )
+
+                currentDailySchedule = mergedSchedule
 
                 _uiState.value = ScheduleUiMapper.map(
                     dailySchedule = mergedSchedule,

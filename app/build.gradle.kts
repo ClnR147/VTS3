@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.camera.camera2.pipe)
+    implementation(libs.androidx.room.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

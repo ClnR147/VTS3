@@ -4,21 +4,23 @@ package com.example.vtsdaily3.feature_schedule.ui
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.vtsdaily3.feature_schedule.data.JsonTripStatusStore
 import com.example.vtsdaily3.feature_schedule.data.ScheduleRepository
 
 class ScheduleViewModelFactory(
-    private val repository: ScheduleRepository,
-    private val appContext: Context
+    private val appContext: Context,
+    private val repository: ScheduleRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ScheduleViewModel::class.java)) {
-            return ScheduleViewModel(
-                repository = repository,
-                appContext = appContext
-            ) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+
+        val tripStatusStore = JsonTripStatusStore(appContext)
+
+        return ScheduleViewModel(
+            appContext = appContext,
+            repository = repository,
+            tripStatusStore = tripStatusStore
+        ) as T
     }
 }

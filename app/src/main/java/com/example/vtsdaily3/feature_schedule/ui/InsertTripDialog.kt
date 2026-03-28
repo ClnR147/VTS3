@@ -1,6 +1,5 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -170,7 +169,7 @@ fun InsertTripDialog(
                     )
 
                     onSave(newTrip)
-                    Log.d("INSERT_DEBUG", "Save tapped")
+
                 }
             ) {
                 Text("Save"

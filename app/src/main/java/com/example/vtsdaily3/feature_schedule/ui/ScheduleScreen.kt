@@ -531,50 +531,72 @@ private fun TripCard(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .width(nameStartOffset)
-                        .clickable {
-                            val phone = trip.phone.trim()
-                            if (phone.isNotBlank()) {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
-                                )
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "No phone number available",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
+                        .weight(1f)
+                        .clickable { expanded = !expanded },
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .width(nameStartOffset)
+                            .clickable {
+                                val phone = trip.phone.trim()
+                                if (phone.isNotBlank()) {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
+                                    )
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "No phone number available",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                    ) {
+                        Text(
+                            text = trip.time,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = CardHighlight.copy(alpha = 0.65f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
+                        )
+                    }
+
                     Text(
-                        text = trip.time,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = CardHighlight.copy(alpha = 0.65f),
+                        text = trip.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
-                        overflow = TextOverflow.Clip
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showPassengerDialog = true }
                     )
                 }
 
-                Text(
-                    text = trip.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showPassengerDialog = true }
-                )
+                Spacer(modifier = Modifier.width(4.dp))
+
+                IconButton(
+                    onClick = {
+                        Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
+                        onAddTripRequested()
+                    },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.AddCircleOutline,
+                        contentDescription = "Add Trip",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
             if (showPassengerDialog) {
@@ -770,21 +792,6 @@ private fun TripCard(
                         Icon(
                             imageVector = Icons.Outlined.PersonSearch,
                             contentDescription = "Lookup Passenger",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
-                            onAddTripRequested()
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.AddCircleOutline,
-                            contentDescription = "Add Trip",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )

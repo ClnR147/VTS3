@@ -1,7 +1,6 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,8 +17,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import com.example.vtsdaily3.model.TripId
 import kotlinx.coroutines.flow.asStateFlow
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.toMutableStateList
 import com.example.vtsdaily3.feature_schedule.data.InsertedTripStore
 
 class ScheduleViewModel(
@@ -125,25 +122,18 @@ class ScheduleViewModel(
     }
 
     fun insertTrip(trip: Trip) {
-        Log.d("INSERT_DEBUG", "ViewModel received trip: $trip")
 
         val activeTrip = trip.copy(status = TripStatus.ACTIVE)
-        Log.d("INSERT_DEBUG", "Active trip: $activeTrip")
 
         InsertedTripStore.add(appContext, activeTrip)
-        Log.d("INSERT_DEBUG", "InsertedTripStore.add complete")
 
         reloadInsertedTripsForDate(activeTrip.date)
-        Log.d("INSERT_DEBUG", "reloadInsertedTripsForDate complete")
 
         val schedule = currentDailySchedule
-        Log.d("INSERT_DEBUG", "currentDailySchedule is null? ${schedule == null}")
         if (schedule == null) return
 
-        Log.d("INSERT_DEBUG", "Base schedule trip count: ${schedule.trips.size}")
 
         val mergedSchedule = mergedScheduleWithInsertedTrips(schedule)
-        Log.d("INSERT_DEBUG", "Merged schedule trip count: ${mergedSchedule.trips.size}")
 
         _uiState.value = ScheduleUiMapper.map(
             dailySchedule = mergedSchedule,
@@ -152,24 +142,19 @@ class ScheduleViewModel(
             errorMessage = null
         )
 
-        Log.d("INSERT_DEBUG", "UI state updated")
+
     }
 
     private fun reloadInsertedTripsForDate(date: LocalDate) {
         val loaded = InsertedTripStore.load(appContext, date)
-        Log.d("INSERT_DEBUG", "reloadInsertedTripsForDate($date) loaded count=${loaded.size}")
-        Log.d("INSERT_DEBUG", "reloadInsertedTripsForDate loaded trips=$loaded")
 
         insertedTrips.clear()
         insertedTrips.addAll(loaded)
 
-        Log.d("INSERT_DEBUG", "insertedTrips size after reload=${insertedTrips.size}")
     }
 
     private fun mergedScheduleWithInsertedTrips(schedule: DailySchedule): DailySchedule {
         val insertedForDate = insertedTrips.filter { it.date == schedule.date }
-
-        Log.d("INSERT_DEBUG", "mergedScheduleWithInsertedTrips schedule.date=${schedule.date} insertedTrips.size=${insertedTrips.size} insertedForDate.size=${insertedForDate.size}")
 
         return schedule.copy(
             trips = schedule.trips + insertedForDate

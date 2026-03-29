@@ -27,6 +27,7 @@ runtimeVersion = "1.10.5"
 uiVersion = "1.10.5"
 foundationLayout = "1.10.5"
 cameraCamera2Pipe = "1.7.0-alpha01"
+roomKtx = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -62,6 +63,7 @@ androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", versi
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 androidx-camera-camera2-pipe = { group = "androidx.camera", name = "camera-camera2-pipe", version.ref = "cameraCamera2Pipe" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

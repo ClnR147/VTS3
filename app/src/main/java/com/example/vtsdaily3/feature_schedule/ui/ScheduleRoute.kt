@@ -2,6 +2,7 @@ package com.example.vtsdaily3.feature_schedule.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.setValue
 import com.example.vtsdaily3.data.ScheduleFolderPrefs
+import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_lookup.data.findInsertTripPrefill
 import com.example.vtsdaily3.feature_schedule.di.ScheduleModule
 
 @Composable
@@ -35,7 +39,12 @@ fun ScheduleRoute(
     var savedFolderUri: Uri? by remember {
         mutableStateOf<Uri?>(ScheduleFolderPrefs.load(context))
     }
+    var lookupHistoryRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
 
+    LaunchedEffect(Unit) {
+        lookupHistoryRows = LookupStore.load(context)
+        Log.d("PREFILL_DEBUG", "Loaded lookup rows size=${lookupHistoryRows.size}")
+    }
     val factory = remember(savedFolderUri) {
         ScheduleModule.createViewModelFactory(context)
     }
@@ -88,7 +97,21 @@ fun ScheduleRoute(
                 onPreviousDate = viewModel::goToPreviousAvailableDate,
                 onNextDate = viewModel::goToNextAvailableDate,
                 onLookupPassenger = onLookupPassenger,
-                onInsertTrip = viewModel::insertTrip
+                onInsertTrip = viewModel::insertTrip,
+                onPrefillInsertedTrip = { name, tripType ->
+                    Log.d("PREFILL_DEBUG", "Route received name=[$name], type=[$tripType]")
+                    Log.d("PREFILL_DEBUG", "lookupHistoryRows size=${lookupHistoryRows.size}")
+
+                    val result = findInsertTripPrefill(
+                        rows = lookupHistoryRows,
+                        passengerName = name,
+                        tripType = tripType
+                    )
+
+                    Log.d("PREFILL_DEBUG", "Route result=$result")
+
+                    result
+                }
             )
         }
     }

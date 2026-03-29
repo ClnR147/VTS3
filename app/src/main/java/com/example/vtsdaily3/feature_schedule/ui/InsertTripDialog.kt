@@ -28,15 +28,16 @@ import com.example.vtsdaily3.model.TripStatus
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
 
 @Composable
 fun InsertTripDialog(
-    lookupRows: List<LookupRow>,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
-    onSave: (Trip) -> Unit
+    onSave: (Trip) -> Unit,
+    onPrefill: (name: String, tripType: String) -> InsertTripPrefill?
 ) {
     var nameInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
@@ -44,6 +45,16 @@ fun InsertTripDialog(
     var toInput by remember { mutableStateOf("") }
     var timeInput by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("PA") }
+    var prefillError by remember { mutableStateOf(false) }
+
+
+    val canSave =
+        nameInput.isNotBlank() &&
+                selectedType.isNotBlank() &&
+                timeInput.isNotBlank() &&
+                phoneInput.isNotBlank() &&
+                fromInput.isNotBlank() &&
+                toInput.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -91,21 +102,23 @@ fun InsertTripDialog(
 
                     Button(
                         onClick = {
-                            val template = findPrefillTemplate(
-                                rows = lookupRows,
-                                passenger = nameInput,
-                                type = selectedType,
-                                date = selectedDate
-                            )
+                            Log.d("PREFILL_DEBUG", "Prefill clicked")
+                            Log.d("PREFILL_DEBUG", "nameInput=[$nameInput], selectedType=[$selectedType]")
 
-                            template?.let {
-                                nameInput = it.name
-                                phoneInput = it.phone
-                                fromInput = it.fromAddress
-                                toInput = it.toAddress
+                            val prefill = onPrefill(nameInput, selectedType)
+
+                            Log.d("PREFILL_DEBUG", "prefill result=$prefill")
+
+                            if (prefill != null) {
+                                phoneInput = prefill.phone
+                                fromInput = prefill.pickupAddress
+                                toInput = prefill.dropoffAddress
+                                prefillError = false
+                            } else {
+                                prefillError = true
                             }
                         },
-                        enabled = nameInput.isNotBlank()
+                        enabled = nameInput.isNotBlank() && selectedType.isNotBlank()
                     ) {
                         Text("Prefill")
                     }
@@ -170,11 +183,11 @@ fun InsertTripDialog(
                     )
 
                     onSave(newTrip)
-                    Log.d("INSERT_DEBUG", "Save tapped")
-                }
+
+                },
+                enabled = canSave
             ) {
-                Text("Save"
-                )
+                Text("Save")
             }
         },
         dismissButton = {

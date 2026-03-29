@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-
 class ScheduleViewModel(
     private val appContext: Context,
     private val repository: ScheduleRepository,
@@ -38,35 +37,6 @@ class ScheduleViewModel(
         val fromAddress: String = "",
         val toAddress: String = ""
     )
-    private fun normalizePrefillName(name: String): String {
-        return name.trim().replace(Regex("\\s+"), " ")
-    }
-
-    private fun matchesLegType(trip: Trip, legType: InsertLegType): Boolean {
-        return when (legType) {
-            InsertLegType.PA -> trip.time.contains("PA", ignoreCase = true)
-            InsertLegType.PR -> trip.time.contains("PR", ignoreCase = true)
-        }
-    }
-
-    private fun findLastKnownTripForPassenger(
-        passengerName: String,
-        legType: InsertLegType
-    ): Trip? {
-        val targetName = normalizePrefillName(passengerName)
-
-        val allTrips = currentDailySchedule?.trips.orEmpty()
-
-        return allTrips
-            .asSequence()
-            .filter { normalizePrefillName(it.name).equals(targetName, ignoreCase = true) }
-            .filter { matchesLegType(it, legType) }
-            .sortedWith(
-                compareByDescending<Trip> { it.date }
-                    .thenByDescending { it.time }
-            )
-            .firstOrNull()
-    }
 
     private val _uiState = MutableStateFlow(ScheduleUiState(isLoading = true))
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
@@ -179,22 +149,7 @@ class ScheduleViewModel(
         insertedTrips.clear()
         insertedTrips.addAll(loaded)
     }
-    fun getPrefillForPassenger(
-        passengerName: String,
-        legType: InsertLegType
-    ): TripPrefillResult? {
-
-        val match = findLastKnownTripForPassenger(passengerName, legType)
-            ?: return null
-
-        return TripPrefillResult(
-            phone = match.phone,
-            fromAddress = match.fromAddress,
-            toAddress = match.toAddress
-        )
-    }
-
-    private fun mergedScheduleWithInsertedTrips(
+        private fun mergedScheduleWithInsertedTrips(
         schedule: DailySchedule,
         savedStatuses: List<TripStatusRecord>
     ): DailySchedule {

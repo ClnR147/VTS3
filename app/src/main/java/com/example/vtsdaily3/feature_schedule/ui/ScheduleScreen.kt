@@ -85,8 +85,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
+import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.ui.InsertTripDialog
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 
@@ -104,7 +106,8 @@ fun ScheduleScreen(
     onPreviousDate: () -> Unit,
     onNextDate: () -> Unit,
     onLookupPassenger: (String) -> Unit,
-    onInsertTrip: (Trip) -> Unit
+    onInsertTrip: (Trip) -> Unit,
+    onPrefillInsertedTrip: (name: String, tripType: String) -> InsertTripPrefill?
 ) {
     val context = LocalContext.current
 
@@ -207,8 +210,10 @@ fun ScheduleScreen(
                         items = uiState.tripsForSelectedView,
                         key = { trip -> trip.id.toString() }
                     ) { trip ->
+                        val hasNote = PassengerNotesStore.get(context, trip.name) != null
                         TripCard(
                             trip = trip,
+                            hasNote = hasNote,
                             selectedDate = uiState.selectedDate,
                             clinics = clinics,
                             viewMode = uiState.selectedViewMode,
@@ -290,12 +295,12 @@ fun ScheduleScreen(
 
     if (showInsertDialog) {
         InsertTripDialog(
-            scheduleViewModel = viewModel,
-            lookupRows = lookupRows,
             selectedDate = uiState.selectedDate,
             onDismiss = { showInsertDialog = false },
-            onSave = { trip ->
-                viewModel.insertTrip(trip)
+            onPrefill = onPrefillInsertedTrip,
+            onSave = { newTrip ->
+                Log.d("INSERT_DEBUG", "Calling onInsertTrip with: $newTrip")
+                onInsertTrip(newTrip)
                 showInsertDialog = false
             }
         )
@@ -451,6 +456,7 @@ private fun AddClinicDialog(
 @Composable
 private fun TripCard(
     trip: Trip,
+    hasNote: Boolean,
     selectedDate: LocalDate,
     clinics: List<ClinicEntry>,
     viewMode: TripViewMode,
@@ -590,7 +596,7 @@ private fun TripCard(
 
                 IconButton(
                     onClick = {
-
+                        Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
                         onAddTripRequested()
                     },
                     modifier = Modifier.size(32.dp)
@@ -809,7 +815,7 @@ private fun TripCard(
                         Icon(
                             imageVector = Icons.Outlined.EditNote,
                             contentDescription = "Passenger Notes",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (hasNote) VtsGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }

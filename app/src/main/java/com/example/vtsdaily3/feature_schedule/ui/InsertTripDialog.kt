@@ -1,5 +1,6 @@
 package com.example.vtsdaily3.feature_schedule.ui
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.vtsdaily3.feature_lookup.data.LookupRow
+import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.model.Trip
 import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
@@ -31,11 +32,10 @@ import java.time.LocalDate
 
 @Composable
 fun InsertTripDialog(
-    scheduleViewModel: ScheduleViewModel,
-    lookupRows: List<LookupRow>,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
-    onSave: (Trip) -> Unit
+    onSave: (Trip) -> Unit,
+    onPrefill: (name: String, tripType: String) -> InsertTripPrefill?
 ) {
     var nameInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
@@ -43,6 +43,15 @@ fun InsertTripDialog(
     var toInput by remember { mutableStateOf("") }
     var timeInput by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("PA") }
+    var prefillError by remember { mutableStateOf(false) }
+
+    val canSave =
+        nameInput.isNotBlank() &&
+                selectedType.isNotBlank() &&
+                timeInput.isNotBlank() &&
+                phoneInput.isNotBlank() &&
+                fromInput.isNotBlank() &&
+                toInput.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -53,7 +62,10 @@ fun InsertTripDialog(
             ) {
                 OutlinedTextField(
                     value = nameInput,
-                    onValueChange = { nameInput = it },
+                    onValueChange = {
+                        nameInput = it
+                        prefillError = false
+                    },
                     label = { Text("Passenger") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -63,7 +75,10 @@ fun InsertTripDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { selectedType = "PA" },
+                        onClick = {
+                            selectedType = "PA"
+                            prefillError = false
+                        },
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (selectedType == "PA") LightGreenCardBackground else Color.Transparent
                         ),
@@ -76,7 +91,10 @@ fun InsertTripDialog(
                     }
 
                     OutlinedButton(
-                        onClick = { selectedType = "PR" },
+                        onClick = {
+                            selectedType = "PR"
+                            prefillError = false
+                        },
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (selectedType == "PR") LightGreenCardBackground else Color.Transparent
                         ),
@@ -90,30 +108,34 @@ fun InsertTripDialog(
 
                     Button(
                         onClick = {
-                            val legType = when (selectedType) {
-                                "PA" -> ScheduleViewModel.InsertLegType.PA
-                                "PR" -> ScheduleViewModel.InsertLegType.PR
-                                else -> null
-                            }
+                            Log.d("PREFILL_DEBUG", "Prefill clicked")
+                            Log.d("PREFILL_DEBUG", "nameInput=[$nameInput], selectedType=[$selectedType]")
 
-                            if (nameInput.isBlank() || legType == null) {
-                                return@Button
-                            }
+                            val prefill = onPrefill(nameInput.trim(), selectedType)
 
-                            val result = scheduleViewModel.getPrefillForPassenger(
-                                passengerName = nameInput,
-                                legType = legType
-                            )
+                            Log.d("PREFILL_DEBUG", "prefill result=$prefill")
 
-                            if (result != null) {
-                                phoneInput = result.phone
-                                fromInput = result.fromAddress
-                                toInput = result.toAddress
+                            if (prefill != null) {
+                                phoneInput = prefill.phone
+                                fromInput = prefill.pickupAddress
+                                toInput = prefill.dropoffAddress
+                                prefillError = false
+                            } else {
+                                prefillError = true
                             }
-                        }
+                        },
+                        enabled = nameInput.isNotBlank() && selectedType.isNotBlank()
                     ) {
                         Text("Prefill")
                     }
+                }
+
+                if (prefillError) {
+                    Text(
+                        text = "Passenger not found",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 OutlinedTextField(
@@ -175,7 +197,8 @@ fun InsertTripDialog(
                     )
 
                     onSave(newTrip)
-                }
+                },
+                enabled = canSave
             ) {
                 Text("Save")
             }

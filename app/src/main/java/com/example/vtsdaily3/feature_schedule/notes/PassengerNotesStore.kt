@@ -50,6 +50,7 @@ object PassengerNotesStore {
     fun getAll(context: Context): List<PassengerResidenceNote> {
         return loadAll(context).values.toList()
     }
+
     fun put(
         context: Context,
         note: PassengerResidenceNote

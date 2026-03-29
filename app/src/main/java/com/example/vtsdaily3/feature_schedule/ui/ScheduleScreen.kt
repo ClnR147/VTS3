@@ -125,10 +125,7 @@ fun ScheduleScreen(
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
-
     var notes by remember { mutableStateOf<List<PassengerResidenceNote>>(emptyList()) }
-
-
 
     LaunchedEffect(Unit) {
         notes = PassengerNotesStore.getAll(context)
@@ -216,7 +213,12 @@ fun ScheduleScreen(
                         items = uiState.tripsForSelectedView,
                         key = { trip -> trip.id.toString() }
                     ) { trip ->
-                        val hasNote = PassengerNotesStore.get(context, trip.name) != null
+
+                        val normalizedTripName = normalizeNameForNotes(trip.name)
+
+                        val hasNote = notes.any {
+                            normalizeNameForNotes(it.displayPassengerName) == normalizedTripName
+                        }
 
                         TripCard(
                             trip = trip,
@@ -935,6 +937,8 @@ private fun TripCard(
     }
 }
 
+
+
 @Composable
 private fun EmptyScheduleState(
     viewMode: TripViewMode,
@@ -1209,11 +1213,24 @@ private fun launchWaze(context: Context, address: String) {
     start(Intent(Intent.ACTION_VIEW, "geo:0,0?q=$q".toUri()))
 }
 
+private fun tripDisplayNameForNotes(tripName: String): String {
+    return tripName.substringBefore(" (").trim()
+}
 private fun TripStatus.otherLabelV3(): String = when (this) {
     TripStatus.CANCELLED -> "CANCEL"
     TripStatus.NOSHOW -> "NO SHOW"
     TripStatus.REMOVED -> "REMOVED"
     else -> ""
+}
+
+
+private fun normalizeNameForNotes(raw: String): String {
+    return raw
+        .substringBefore(" (")          // remove (WC) etc
+        .lowercase()
+        .replace(Regex("[^a-z\\- ]"), "") // keep letters, hyphen, space
+        .replace(Regex("\\s+"), " ")   // collapse spaces
+        .trim()
 }
 
 fun buildScheduleWarnings(

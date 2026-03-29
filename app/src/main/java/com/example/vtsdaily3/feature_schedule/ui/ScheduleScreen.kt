@@ -87,7 +87,9 @@ import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddres
 import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
+import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 
 
 
@@ -121,12 +123,19 @@ fun ScheduleScreen(
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
 
+    var notes by remember { mutableStateOf<List<PassengerResidenceNote>>(emptyList()) }
 
+
+
+    LaunchedEffect(Unit) {
+        notes = PassengerNotesStore.getAll(context)
+    }
 
     LaunchedEffect(Unit) {
         clinics = ClinicStore.load(context)
         lookupRows = LookupStore.load(context)
     }
+
 
     notesTrip?.let { selectedTrip ->
         PassengerNotesScreen(
@@ -204,8 +213,13 @@ fun ScheduleScreen(
                         items = uiState.tripsForSelectedView,
                         key = { trip -> trip.id.toString() }
                     ) { trip ->
+
+                        val hasNote = notes.any {
+                            it.displayPassengerName == trip.name.trim()
+                        }
                         TripCard(
                             trip = trip,
+                            hasNote = hasNote,
                             selectedDate = uiState.selectedDate,
                             clinics = clinics,
                             viewMode = uiState.selectedViewMode,
@@ -448,6 +462,7 @@ private fun AddClinicDialog(
 @Composable
 private fun TripCard(
     trip: Trip,
+    hasNote: Boolean,
     selectedDate: LocalDate,
     clinics: List<ClinicEntry>,
     viewMode: TripViewMode,
@@ -587,7 +602,6 @@ private fun TripCard(
 
                 IconButton(
                     onClick = {
-                        Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
                         onAddTripRequested()
                     },
                     modifier = Modifier.size(32.dp)
@@ -806,7 +820,7 @@ private fun TripCard(
                         Icon(
                             imageVector = Icons.Outlined.EditNote,
                             contentDescription = "Passenger Notes",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (hasNote) VtsGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }

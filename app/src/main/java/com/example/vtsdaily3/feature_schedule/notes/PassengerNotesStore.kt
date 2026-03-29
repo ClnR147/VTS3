@@ -47,7 +47,9 @@ object PassengerNotesStore {
     ): PassengerResidenceNote? {
         return loadAll(context)[recordKey]
     }
-
+    fun getAll(context: Context): List<PassengerResidenceNote> {
+        return loadAll(context).values.toList()
+    }
     fun put(
         context: Context,
         note: PassengerResidenceNote
@@ -57,3 +59,4 @@ object PassengerNotesStore {
         saveAll(context, all)
     }
 }
+

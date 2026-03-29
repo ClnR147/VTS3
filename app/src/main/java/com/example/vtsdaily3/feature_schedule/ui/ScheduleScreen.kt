@@ -90,6 +90,7 @@ import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.ui.InsertTripDialog
+import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 
 
@@ -125,14 +126,19 @@ fun ScheduleScreen(
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
 
+    var notes by remember { mutableStateOf<List<PassengerResidenceNote>>(emptyList()) }
 
 
 
+    LaunchedEffect(Unit) {
+        notes = PassengerNotesStore.getAll(context)
+    }
 
     LaunchedEffect(Unit) {
         clinics = ClinicStore.load(context)
         lookupRows = LookupStore.load(context)
     }
+
 
     notesTrip?.let { selectedTrip ->
         PassengerNotesScreen(
@@ -211,6 +217,7 @@ fun ScheduleScreen(
                         key = { trip -> trip.id.toString() }
                     ) { trip ->
                         val hasNote = PassengerNotesStore.get(context, trip.name) != null
+
                         TripCard(
                             trip = trip,
                             hasNote = hasNote,
@@ -596,7 +603,6 @@ private fun TripCard(
 
                 IconButton(
                     onClick = {
-                        Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
                         onAddTripRequested()
                     },
                     modifier = Modifier.size(32.dp)

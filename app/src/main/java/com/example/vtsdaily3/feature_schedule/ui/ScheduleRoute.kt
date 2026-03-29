@@ -80,6 +80,7 @@ fun ScheduleRoute(
         else -> {
             ScheduleScreen(
                 uiState = uiState,
+                viewModel = viewModel,
                 onSelectDate = viewModel::selectDate,
                 onSelectViewMode = viewModel::selectViewMode,
                 onMarkTripStatus = viewModel::markTripStatus,

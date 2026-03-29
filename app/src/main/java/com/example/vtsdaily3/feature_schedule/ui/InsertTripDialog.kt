@@ -14,24 +14,24 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.model.Trip
-import com.example.vtsdaily3.util.findPrefillTemplate
-import java.time.LocalDate
 import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import com.example.vtsdaily3.ui.theme.LightGreenCardBackground
 import com.example.vtsdaily3.ui.theme.VtsGreen
+import java.time.LocalDate
 
 @Composable
 fun InsertTripDialog(
+    scheduleViewModel: ScheduleViewModel,
     lookupRows: List<LookupRow>,
     selectedDate: LocalDate,
     onDismiss: () -> Unit,
@@ -90,21 +90,27 @@ fun InsertTripDialog(
 
                     Button(
                         onClick = {
-                            val template = findPrefillTemplate(
-                                rows = lookupRows,
-                                passenger = nameInput,
-                                type = selectedType,
-                                date = selectedDate
+                            val legType = when (selectedType) {
+                                "PA" -> ScheduleViewModel.InsertLegType.PA
+                                "PR" -> ScheduleViewModel.InsertLegType.PR
+                                else -> null
+                            }
+
+                            if (nameInput.isBlank() || legType == null) {
+                                return@Button
+                            }
+
+                            val result = scheduleViewModel.getPrefillForPassenger(
+                                passengerName = nameInput,
+                                legType = legType
                             )
 
-                            template?.let {
-                                nameInput = it.name
-                                phoneInput = it.phone
-                                fromInput = it.fromAddress
-                                toInput = it.toAddress
+                            if (result != null) {
+                                phoneInput = result.phone
+                                fromInput = result.fromAddress
+                                toInput = result.toAddress
                             }
-                        },
-                        enabled = nameInput.isNotBlank()
+                        }
                     ) {
                         Text("Prefill")
                     }
@@ -169,11 +175,9 @@ fun InsertTripDialog(
                     )
 
                     onSave(newTrip)
-
                 }
             ) {
-                Text("Save"
-                )
+                Text("Save")
             }
         },
         dismissButton = {

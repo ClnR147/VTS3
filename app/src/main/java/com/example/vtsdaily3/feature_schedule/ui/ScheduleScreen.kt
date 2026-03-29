@@ -83,9 +83,11 @@ import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_schedule.ui.InsertTripDialog
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 
 
@@ -93,6 +95,7 @@ import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 @Composable
 fun ScheduleScreen(
     uiState: ScheduleUiState,
+    viewModel: ScheduleViewModel,
     onSelectDate: (LocalDate) -> Unit,
     onSelectViewMode: (TripViewMode) -> Unit,
     onMarkTripStatus: (TripId, TripStatus) -> Unit,
@@ -118,6 +121,8 @@ fun ScheduleScreen(
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
+
+
 
 
 
@@ -285,12 +290,12 @@ fun ScheduleScreen(
 
     if (showInsertDialog) {
         InsertTripDialog(
+            scheduleViewModel = viewModel,
             lookupRows = lookupRows,
             selectedDate = uiState.selectedDate,
             onDismiss = { showInsertDialog = false },
-            onSave = { newTrip ->
-                Log.d("INSERT_DEBUG", "Calling onInsertTrip with: $newTrip")
-                onInsertTrip(newTrip)
+            onSave = { trip ->
+                viewModel.insertTrip(trip)
                 showInsertDialog = false
             }
         )
@@ -585,7 +590,7 @@ private fun TripCard(
 
                 IconButton(
                     onClick = {
-                        Log.d("INSERT_DEBUG", "Add Trip button clicked for selectedDate=$selectedDate")
+
                         onAddTripRequested()
                     },
                     modifier = Modifier.size(32.dp)

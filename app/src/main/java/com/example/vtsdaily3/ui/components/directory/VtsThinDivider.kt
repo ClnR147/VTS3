@@ -9,6 +9,6 @@ import com.example.vtsdaily3.ui.theme.VtsGreen
 fun VtsThinDivider() {
     HorizontalDivider(
         color = VtsGreen.copy(alpha = 0.25f), // 👈 soft, not loud
-        thickness = 1.dp
+        thickness = 3.dp
     )
 }

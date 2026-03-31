@@ -23,7 +23,7 @@ val CardHighlight = Color(0xFF1A73E8)         // Card or row outline/accent
 val ActionGreen = Color(0xFF2E7D32)           // Marking / done button
 
 // --- Soft / Neutral Colors ---
-val SubtleGrey = Color(0xFFE1F9F4)
+val SubtleGrey = Color(0xFFFDFDFD)
 
 // Light card backgrounds
 val FromGrey = Color(0xFF5F6368)              // For "from" address text, icons, etc.

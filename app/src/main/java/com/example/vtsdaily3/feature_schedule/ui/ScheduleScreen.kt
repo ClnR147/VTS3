@@ -31,8 +31,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.LocalHospital
 import androidx.compose.material.icons.outlined.PersonSearch
-import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -78,18 +78,15 @@ import com.example.vtsdaily3.ui.theme.SubtleGrey
 import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
 import com.example.vtsdaily3.feature_clinics.data.ClinicStore
 import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
-import com.example.vtsdaily3.feature_schedule.domain.ScheduleWarning
 import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
 import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
-import com.example.vtsdaily3.feature_schedule.ui.InsertTripDialog
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
 
@@ -177,15 +174,12 @@ fun ScheduleScreen(
         ScheduleHeaderCard(
             selectedDateText = formattedSelectedDate,
             selectedViewMode = uiState.selectedViewMode,
-            activeCount = uiState.activeCount,
-            completedCount = uiState.completedCount,
-            otherCount = uiState.otherCount,
             onPreviousDate = onPreviousDate,
             onNextDate = onNextDate,
             onDateClick = { showDatePickerDialog = true },
             onSelectViewMode = onSelectViewMode
         )
-
+        Spacer(modifier = Modifier.height(2.dp))
         when {
             uiState.isLoading -> {
                 Box(
@@ -204,11 +198,11 @@ fun ScheduleScreen(
             }
 
             else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                     items(
                         items = uiState.tripsForSelectedView,
                         key = { trip -> trip.id.toString() }
@@ -260,8 +254,8 @@ fun ScheduleScreen(
                             }
                         )
 
-                        Spacer(Modifier.height(9.dp))
-                        VtsThinDivider()
+                        Spacer(Modifier.height(2.dp))
+                      //*  VtsThinDivider() *//
                     }
                 }
             }
@@ -542,9 +536,11 @@ private fun TripCard(
             containerColor = SubtleGrey,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
+
         border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+            0.5.dp,
+            Color.Black
+            //* MaterialTheme.colorScheme.outline.copy(alpha = 0.7f) *//
         )
     ) {
         Column(
@@ -635,7 +631,7 @@ private fun TripCard(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = if (phone.isNotBlank()) phone else "No phone number available",
+                                text = phone.ifBlank { "No phone number available" },
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -737,7 +733,8 @@ private fun TripCard(
                 val clinicInteractionSource = remember { MutableInteractionSource() }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(start = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -793,7 +790,7 @@ private fun TripCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Phone,
+                            imageVector = Icons.Outlined.LocalHospital,
                             contentDescription = "Call Clinic",
                             tint = when {
                                 clinicPhone != null -> MaterialTheme.colorScheme.primary
@@ -837,7 +834,7 @@ private fun TripCard(
             Log.d(
                 "ClinicMatch",
                 "Direction mismatch: trip='${trip.name}', time='${trip.time}', " +
-                        "expectedSide='${expectedClinicAddress}', oppositeSideMatched='${oppositeClinicMatch?.name}'"
+                        "expectedSide='${expectedClinicAddress}', oppositeSideMatched='${oppositeClinicMatch.name}'"
             )
         }
 
@@ -973,9 +970,6 @@ enum class TripMenuAction(val label: String) {
 fun ScheduleHeaderCard(
     selectedDateText: String,
     selectedViewMode: TripViewMode,
-    activeCount: Int,
-    completedCount: Int,
-    otherCount: Int,
     onPreviousDate: () -> Unit,
     onNextDate: () -> Unit,
     onDateClick: () -> Unit,
@@ -1028,7 +1022,7 @@ fun ScheduleHeaderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(4.dp)) //was 10.dp
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1213,9 +1207,7 @@ private fun launchWaze(context: Context, address: String) {
     start(Intent(Intent.ACTION_VIEW, "geo:0,0?q=$q".toUri()))
 }
 
-private fun tripDisplayNameForNotes(tripName: String): String {
-    return tripName.substringBefore(" (").trim()
-}
+
 private fun TripStatus.otherLabelV3(): String = when (this) {
     TripStatus.CANCELLED -> "CANCEL"
     TripStatus.NOSHOW -> "NO SHOW"
@@ -1233,74 +1225,3 @@ private fun normalizeNameForNotes(raw: String): String {
         .trim()
 }
 
-fun buildScheduleWarnings(
-    trips: List<Trip>,
-    clinics: List<ClinicEntry>
-): List<ScheduleWarning> {
-    val warnings = mutableListOf<ScheduleWarning>()
-
-    trips.forEach { trip ->
-        val time = trip.time
-
-        val isPA = time.contains("PA", ignoreCase = true)
-        val isPR = time.contains("PR", ignoreCase = true)
-
-        if (!isPA && !isPR) {
-            warnings += ScheduleWarning(
-                tripId = trip.id,
-                message = "Missing PA/PR"
-            )
-        }
-
-        if (isPA) {
-            val expectedClinic = findMatchingClinic(trip.toAddress, clinics)
-            val oppositeClinic = findMatchingClinic(trip.fromAddress, clinics)
-
-            when {
-                expectedClinic != null -> Unit
-                oppositeClinic != null -> {
-                    warnings += ScheduleWarning(
-                        tripId = trip.id,
-                        message = "PA trip appears to have clinic on FROM side"
-                    )
-                }
-                else -> {
-                    warnings += ScheduleWarning(
-                        tripId = trip.id,
-                        message = "PA trip but TO is not a known clinic"
-                    )
-                }
-            }
-        }
-
-        if (isPR) {
-            val expectedClinic = findMatchingClinic(trip.fromAddress, clinics)
-            val oppositeClinic = findMatchingClinic(trip.toAddress, clinics)
-
-            when {
-                expectedClinic != null -> Unit
-                oppositeClinic != null -> {
-                    warnings += ScheduleWarning(
-                        tripId = trip.id,
-                        message = "PR trip appears to have clinic on TO side"
-                    )
-                }
-                else -> {
-                    warnings += ScheduleWarning(
-                        tripId = trip.id,
-                        message = "PR trip but FROM is not a known clinic"
-                    )
-                }
-            }
-        }
-
-        if (trip.phone.isBlank()) {
-            warnings += ScheduleWarning(
-                tripId = trip.id,
-                message = "Missing passenger phone"
-            )
-        }
-    }
-
-    return warnings
-}

@@ -254,7 +254,7 @@ fun ScheduleScreen(
                             }
                         )
 
-                        Spacer(Modifier.height(2.dp))
+                     //*   Spacer(Modifier.height(1.dp)) *//
                       //*  VtsThinDivider() *//
                     }
                 }
@@ -457,7 +457,7 @@ private fun AddClinicDialog(
 }
 
 @Composable
-private fun TripCard(
+fun TripCard(
     trip: Trip,
     hasNote: Boolean,
     selectedDate: LocalDate,
@@ -828,7 +828,7 @@ private fun TripCard(
             }
         }
 
-        Spacer(Modifier.height(2.dp))
+        //* Spacer(Modifier.height(1.dp)) *//
 
         if (isDirectionMismatch) {
             Log.d(
@@ -982,7 +982,7 @@ fun ScheduleHeaderCard(
         colors = CardDefaults.cardColors(
             containerColor = LightGreenCardBackground
         ),
-        border = BorderStroke(1.0.dp, VtsGreen),
+        border = BorderStroke(3.0.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         )

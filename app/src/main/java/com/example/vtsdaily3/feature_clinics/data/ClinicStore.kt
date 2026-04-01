@@ -1,9 +1,12 @@
 package com.example.vtsdaily3.feature_clinics.data
 
 import android.content.Context
+import android.net.Uri
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.opencsv.CSVWriter
 import java.io.File
+import java.io.OutputStreamWriter
 
 object ClinicStore {
     private const val FILE_NAME = "clinics.json"
@@ -26,9 +29,15 @@ object ClinicStore {
         val file = File(context.filesDir, FILE_NAME)
 
         try {
-            file.writeText(gson.toJson(clinics))
+            val sorted = clinics.sortedWith(
+                compareBy({ it.name.lowercase() }, { it.address.lowercase() })
+            )
+            file.writeText(gson.toJson(sorted))
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 }
+
+
+

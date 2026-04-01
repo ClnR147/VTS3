@@ -179,7 +179,7 @@ fun ScheduleScreen(
             onDateClick = { showDatePickerDialog = true },
             onSelectViewMode = onSelectViewMode
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         when {
             uiState.isLoading -> {
                 Box(
@@ -982,7 +982,7 @@ fun ScheduleHeaderCard(
         colors = CardDefaults.cardColors(
             containerColor = LightGreenCardBackground
         ),
-        border = BorderStroke(3.0.dp, VtsGreen),
+        border = BorderStroke(1.5.dp, VtsGreen),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
         )

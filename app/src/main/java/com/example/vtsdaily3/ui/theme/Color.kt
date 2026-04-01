@@ -12,7 +12,7 @@ val SurfaceWhite = Color.White                // Card and surface default
 val OnPrimaryText = Color(0xFFFFF5E1)         // Light text on purple (legacy)
 val OnSurfaceText = Color.Black               // Text on white background
 //* val LightGreenCardBackground = Color(0xFFE8F5E9) *//
-val LightGreenCardBackground = Color(0xFFdef0da)
+val LightGreenCardBackground = Color(0xFFE8F5E9)
 
 // --- View Mode Status Colors ---
 val ActiveColor = Color(0xFF33691E)           // ACTIVE trip status
@@ -24,7 +24,7 @@ val CardHighlight = Color(0xFF1A73E8)         // Card or row outline/accent
 val ActionGreen = Color(0xFF2E7D32)           // Marking / done button
 
 // --- Soft / Neutral Colors ---
-val SubtleGrey = Color(0xFFcdf7f5)
+val SubtleGrey = Color(0xFFFFFFFF)
 
 // Light card backgrounds
 val FromGrey = Color(0xFF5F6368)              // For "from" address text, icons, etc.

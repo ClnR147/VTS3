@@ -44,6 +44,7 @@ import com.example.vtsdaily3.ui.theme.VtsSpacing
 import com.example.vtsdaily3.ui.theme.VtsTextPrimary_Light
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 
 enum class ClinicSortMode {
     NAME,
@@ -86,6 +87,37 @@ fun ClinicsScreen() {
         }
     }
 
+    val exportClinicsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri == null) {
+            Log.d("ClinicsExport", "Export cancelled")
+            return@rememberLauncherForActivityResult
+        }
+
+        try {
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    writer.appendLine("name,address,phone")
+
+                    clinics.forEach { clinic ->
+                        val escapedName = clinic.name.replace("\"", "\"\"")
+                        val escapedAddress = clinic.address.replace("\"", "\"\"")
+                        val escapedPhone = clinic.phone.replace("\"", "\"\"")
+
+                        writer.appendLine(
+                            "\"$escapedName\",\"$escapedAddress\",\"$escapedPhone\""
+                        )
+                    }
+                }
+            }
+
+            Log.d("ClinicsExport", "Exported ${clinics.size} clinics")
+        } catch (e: Exception) {
+            Log.e("ClinicsExport", "Export failed", e)
+        }
+    }
+
     LaunchedEffect(Unit) {
         reloadClinics()
     }
@@ -105,6 +137,9 @@ fun ClinicsScreen() {
         },
         onImportClinics = {
             importClinicsLauncher.launch(arrayOf("*/*"))
+        },
+        onExportClinics = {
+            exportClinicsLauncher.launch("clinics_export.csv")
         }
     )
 }
@@ -114,7 +149,8 @@ private fun ClinicsScreenContent(
     clinics: List<ClinicEntry>,
     onClinicsChange: (List<ClinicEntry>) -> Unit,
     onCallClinic: (ClinicEntry) -> Unit,
-    onImportClinics: () -> Unit
+    onImportClinics: () -> Unit,
+    onExportClinics: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(ClinicSortMode.NAME) }
@@ -258,6 +294,13 @@ private fun ClinicsScreenContent(
                         onImportClinics()
                     }
                 )
+                DropdownMenuItem(
+                    text = { Text("Export Clinics") },
+                    onClick = {
+                        menuExpanded = false
+                        onExportClinics()
+                    }
+                )
             }
         },
         isListEmpty = filteredAndSortedClinics.isEmpty(),
@@ -363,7 +406,7 @@ private fun ClinicRowCard(
             ) {
                 VtsSummaryRow(
                     title = clinic.name,
-                    subtitle = null // remove phone from here
+                    subtitle = null
                 )
 
                 VtsInfoRow(
@@ -503,7 +546,7 @@ private fun parseClinicsCsv(
     context.contentResolver.openInputStream(uri)?.use { inputStream ->
         BufferedReader(InputStreamReader(inputStream)).use { reader ->
             reader.lineSequence()
-                .drop(1) // skip header
+                .drop(1)
                 .forEach { line ->
                     val trimmed = line.trim()
                     if (trimmed.isBlank()) return@forEach

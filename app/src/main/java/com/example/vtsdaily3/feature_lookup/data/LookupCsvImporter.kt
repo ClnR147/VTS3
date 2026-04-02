@@ -40,6 +40,8 @@ fun importLookupCsv(
                 if (i == 0) s.removePrefix("\uFEFF") else s
             }
 
+            clean.forEachIndexed { index, name ->}
+
             fun findIdx(vararg aliases: String): Int =
                 indexOfHeader(clean, aliases.toList())
 
@@ -89,8 +91,6 @@ fun importLookupCsv(
             fun at(row: Array<String>, i: Int): String? =
                 row.getOrNull(i)?.trim()?.takeIf { it.isNotEmpty() }
 
-            val out = mutableListOf<LookupRow>()
-
             return buildList {
                 reader.forEach { row ->
                     val raw = mutableMapOf<String, String?>()
@@ -136,10 +136,8 @@ fun importLookupCsv(
                     )
                 }
             }
-
-            return out
         }
-}
+    }
 
 private fun indexOfHeader(header: List<String>, aliases: List<String>): Int {
     val normalizedHeader = header.map { normalizeHeader(it) }

@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.content.edit
+import com.example.vtsdaily3.feature_lookup.audit.LookupAddressAudit
+import com.example.vtsdaily3.feature_lookup.audit.LookupAuditCsvExporter
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.feature_lookup.domain.LookupPassengerDetail
@@ -89,10 +91,36 @@ fun LookupScreen(
         }
     }
 
+    val auditExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        try {
+            val rows = LookupStore.load(context)
+            val report = LookupAddressAudit.run(rows)
+            val csv = LookupAuditCsvExporter.toCsv(report)
+
+            context.contentResolver.openOutputStream(uri)?.use { output ->
+                output.write(csv.toByteArray())
+            }
+
+        } catch (e: Exception) {
+            Log.e("LOOKUP_AUDIT", "Failed to export CSV", e)
+        }
+    }
+
     LookupScreenContent(
         uiState = uiState,
         onImportClick = {
             importLauncher.launch(arrayOf("text/*", "*/*"))
+        },
+        onRunDuplicateAddressAudit = {
+            val report = LookupAddressAudit.run(LookupStore.load(context))
+
+        },
+        onExportDuplicateAddressAuditCsv = {
+            auditExportLauncher.launch("lookup_duplicate_address_audit.csv")
         },
         initialPassengerName = initialPassengerName,
         onInitialPassengerNameConsumed = onInitialPassengerNameConsumed
@@ -103,6 +131,8 @@ fun LookupScreen(
 private fun LookupScreenContent(
     uiState: LookupUiState,
     onImportClick: () -> Unit,
+    onRunDuplicateAddressAudit: () -> Unit,
+    onExportDuplicateAddressAuditCsv: () -> Unit,
     initialPassengerName: String? = null,
     onInitialPassengerNameConsumed: () -> Unit = {}
 ) {
@@ -212,6 +242,22 @@ private fun LookupScreenContent(
                     onClick = {
                         menuExpanded = false
                         onImportClick()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Export Audit CSV") },
+                    onClick = {
+                        menuExpanded = false
+                        onExportDuplicateAddressAuditCsv()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Run Lookup Audit") },
+                    onClick = {
+                        menuExpanded = false
+                        onRunDuplicateAddressAudit()
                     }
                 )
 

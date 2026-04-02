@@ -3,6 +3,7 @@ package com.example.vtsdaily3.feature_clinics.ui
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.combinedClickable
@@ -34,6 +35,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
 import com.example.vtsdaily3.feature_clinics.data.ClinicStore
+import com.example.vtsdaily3.feature_clinics.export.ClinicAddressExportOptions
+import com.example.vtsdaily3.feature_clinics.export.ClinicAddressExportWriter
+import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.ui.components.VtsCard
 import com.example.vtsdaily3.ui.components.VtsCardDensity
 import com.example.vtsdaily3.ui.components.directory.VtsDirectoryScreenShell
@@ -56,10 +60,98 @@ fun ClinicsScreen() {
     val context = LocalContext.current
 
     var clinics by remember { mutableStateOf<List<ClinicEntry>>(emptyList()) }
+    var exportDeduped by remember { mutableStateOf(false) }
 
     fun reloadClinics() {
         clinics = ClinicStore.load(context)
     }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        try {
+            fun normalizeAddressForAudit(address: String?): String {
+                return address
+                    .orEmpty()
+                    .lowercase()
+                    .replace('\u00A0', ' ')
+                    .replace(".", "")
+                    .replace(",", "")
+                    .replace(";", "")
+                    .replace("\\s+".toRegex(), " ")
+                    .trim()
+            }
+
+            val rows = LookupStore.load(context)
+
+            val earlRows = rows.filter { it.passenger == "Earl Chenault" }
+
+            Log.d("ClinicAudit", "Earl rows count: ${earlRows.size}")
+
+            earlRows.forEachIndexed { index, row ->
+                val p = normalizeAddressForAudit(row.pAddress)
+                val d = normalizeAddressForAudit(row.dAddress)
+
+                Log.d(
+                    "ClinicAudit",
+                    """
+                EARL[$index]
+                date=${row.driveDate}
+                tripType=${row.tripType}
+                puTimeAppt=${row.puTimeAppt}
+                doTimeAppt=${row.doTimeAppt}
+                rtTime=${row.rtTime}
+                pRaw=${row.pAddress}
+                dRaw=${row.dAddress}
+                pNorm=[$p]
+                dNorm=[$d]
+                same=${p.isNotBlank() && d.isNotBlank() && p == d}
+                raw=${row.raw}
+                """.trimIndent()
+                )
+            }
+
+            val knownClinicAddresses = clinics
+                .map { clinic ->
+                    clinic.address
+                        .lowercase()
+                        .replace(".", "")
+                        .replace(",", "")
+                        .replace("\\s+".toRegex(), " ")
+                        .trim()
+                }
+                .toSet()
+
+            Log.d("ClinicExport", "Known clinic addresses: ${knownClinicAddresses.size}")
+
+            val writer = ClinicAddressExportWriter(context.contentResolver)
+
+            val count = writer.exportToUri(
+                uri = uri,
+                rows = rows,
+                knownClinicAddresses = knownClinicAddresses,
+                options = ClinicAddressExportOptions(
+                    dedupe = exportDeduped,
+                    excludeKnownClinics = true
+                )
+            )
+
+            Toast.makeText(
+                context,
+                "Exported $count clinic candidate rows",
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Export failed: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
 
     val importClinicsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -86,6 +178,7 @@ fun ClinicsScreen() {
             Log.e("ClinicsImport", "Import failed", e)
         }
     }
+
 
     val exportClinicsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -122,6 +215,7 @@ fun ClinicsScreen() {
         reloadClinics()
     }
 
+
     ClinicsScreenContent(
         clinics = clinics,
         onClinicsChange = { updated ->
@@ -140,6 +234,13 @@ fun ClinicsScreen() {
         },
         onExportClinics = {
             exportClinicsLauncher.launch("clinics_export.csv")
+        },
+        onExportClinicCandidates = { deduped ->
+            exportDeduped = deduped
+            exportLauncher.launch(
+                if (deduped) "clinic_candidates_deduped.csv"
+                else "clinic_candidates_all.csv"
+            )
         }
     )
 }
@@ -150,7 +251,8 @@ private fun ClinicsScreenContent(
     onClinicsChange: (List<ClinicEntry>) -> Unit,
     onCallClinic: (ClinicEntry) -> Unit,
     onImportClinics: () -> Unit,
-    onExportClinics: () -> Unit
+    onExportClinics: () -> Unit,
+    onExportClinicCandidates: (Boolean) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var sortMode by remember { mutableStateOf(ClinicSortMode.NAME) }
@@ -159,6 +261,7 @@ private fun ClinicsScreenContent(
     var editingClinic by remember { mutableStateOf<ClinicEntry?>(null) }
     var clinicPendingDelete by remember { mutableStateOf<ClinicEntry?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var exportDeduped by remember { mutableStateOf(false) }
 
     val filteredAndSortedClinics = remember(clinics, searchQuery, sortMode) {
         clinics
@@ -299,6 +402,21 @@ private fun ClinicsScreenContent(
                     onClick = {
                         menuExpanded = false
                         onExportClinics()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Export Clinic Candidates") },
+                    onClick = {
+                        menuExpanded = false
+                        onExportClinicCandidates(false)
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Export Clinic Candidates (Deduped)") },
+                    onClick = {
+                        menuExpanded = false
+                        onExportClinicCandidates(true)
                     }
                 )
             }

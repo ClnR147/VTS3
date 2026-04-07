@@ -149,7 +149,7 @@ class ScheduleViewModel(
         insertedTrips.clear()
         insertedTrips.addAll(loaded)
     }
-        private fun mergedScheduleWithInsertedTrips(
+    private fun mergedScheduleWithInsertedTrips(
         schedule: DailySchedule,
         savedStatuses: List<TripStatusRecord>
     ): DailySchedule {
@@ -164,9 +164,25 @@ class ScheduleViewModel(
                 }
             }
 
+        val mergedAndSorted = (schedule.trips + insertedForDate)
+            .sortedWith(
+                compareBy<Trip> { parseTimeToSortKey(it.time) }
+                    .thenBy { it.name.lowercase() }
+            )
+
         return schedule.copy(
-            trips = schedule.trips + insertedForDate
+            trips = mergedAndSorted
         )
+    }
+
+    private fun parseTimeToSortKey(time: String): Int {
+        val match = Regex("""(\d{1,2}):(\d{2})""").find(time.trim())
+            ?: return Int.MAX_VALUE
+
+        val hour = match.groupValues[1].toIntOrNull() ?: return Int.MAX_VALUE
+        val minute = match.groupValues[2].toIntOrNull() ?: return Int.MAX_VALUE
+
+        return hour * 60 + minute
     }
 
     private fun loadDate(date: LocalDate) {

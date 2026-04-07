@@ -70,15 +70,38 @@ private fun lookupDisplayName(raw: String): String {
         .trim()
 }
 
+private fun parseDate(date: String?): Long {
+    return try {
+        val formatter = java.text.SimpleDateFormat("MM/dd/yyyy", java.util.Locale.US)
+        formatter.parse(date ?: "")?.time ?: Long.MIN_VALUE
+    } catch (e: Exception) {
+        Long.MIN_VALUE
+    }
+}
+
+private fun parseTime(row: LookupRow): Int {
+    val time = when (row.tripType) {
+        "appt" -> row.puTimeAppt
+        "return" -> row.rtTime
+        else -> row.puTimeAppt ?: row.rtTime
+    } ?: return -1
+
+    val match = Regex("""(\d{1,2}):(\d{2})""").find(time) ?: return -1
+    val hour = match.groupValues[1].toIntOrNull() ?: return -1
+    val minute = match.groupValues[2].toIntOrNull() ?: return -1
+
+    return hour * 60 + minute
+}
 fun buildLookupPassengerDetail(
     rows: List<LookupRow>,
     passengerName: String
 ): LookupPassengerDetail? {
     val targetName = lookupDisplayName(passengerName)
 
-    val matches = rows.filter { row ->
-        normalizePassengerNameForLookup(row.passenger.orEmpty()) == targetName
-    }
+    val matches = rows
+        .filter { row ->
+            normalizePassengerNameForLookup(row.passenger.orEmpty()) == targetName
+        }
 
     if (matches.isEmpty()) return null
 
@@ -89,6 +112,10 @@ fun buildLookupPassengerDetail(
 
     val dayGroups = matches
         .groupBy { it.driveDate }
+        .toList()
+        .sortedByDescending { (driveDate, _) ->
+            parseLookupDriveDate(driveDate) ?: LocalDate.MIN
+        }
         .map { (driveDate, dayRows) ->
             LookupTripDayGroup(
                 driveDate = driveDate,
@@ -99,9 +126,6 @@ fun buildLookupPassengerDetail(
                     )
                 }
             )
-        }
-        .sortedBy { group ->
-            parseLookupDriveDate(group.driveDate) ?: LocalDate.MAX
         }
 
     return LookupPassengerDetail(

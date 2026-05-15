@@ -1,6 +1,7 @@
 package com.example.vtsdaily3.feature_schedule.data
 
 import android.content.Context
+import android.util.Log
 import com.example.vtsdaily3.model.Trip
 import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
@@ -57,7 +58,33 @@ class PoiXlsTripParser(
                     continue
                 }
 
+                if (
+                    nameRaw.contains("Marc Jensen", ignoreCase = true) ||
+                    nameRaw.contains("David Johnson", ignoreCase = true)
+                ) {
+                    Log.d(
+                        "XLS_PARSE_ROW",
+                        "row=$r | name=$nameRaw | colA=${cellString(row.getCell(0)).trim()} | " +
+                                "colC=${cellString(row.getCell(2)).trim()} | " +
+                                "colD=${cellString(row.getCell(3)).trim()} | " +
+                                "colE=${cellString(row.getCell(4)).trim()} | " +
+                                "colF=${cellString(row.getCell(5)).trim()}"
+                    )
+                }
+
+                if (
+                    nameRaw.contains("Marc Jensen", ignoreCase = true) ||
+                    nameRaw.contains("David Johnson", ignoreCase = true)
+                ) {
+                    val values = (0..7).joinToString(" | ") { i ->
+                        "[$i]=${cellString(row.getCell(i)).trim()}"
+                    }
+                    Log.d("XLS_PARSE_WIDE", "row=$r | $values")
+                }
+
                 if (nameRaw.isBlank()) continue
+
+
 
                 val timeForId = if (time.isNotBlank()) time else "NO_TIME"
                 val fromForId = if (fromAddr.isNotBlank()) fromAddr else "NO_FROM"

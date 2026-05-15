@@ -10,6 +10,7 @@ import com.example.vtsdaily3.feature_schedule.data.ScheduleRepository
 import com.example.vtsdaily3.feature_schedule.data.TripStatusRecord
 import com.example.vtsdaily3.feature_schedule.data.TripStatusStore
 import com.example.vtsdaily3.feature_schedule.domain.DailySchedule
+import com.example.vtsdaily3.feature_schedule.domain.ScheduleBlock
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiMapper
 import com.example.vtsdaily3.feature_schedule.ui.state.ScheduleUiState
 import com.example.vtsdaily3.model.Trip
@@ -184,7 +185,23 @@ class ScheduleViewModel(
 
         return hour * 60 + minute
     }
+    private var manualBlocks = mutableStateListOf<ScheduleBlock>()
 
+    fun addScheduleBlock(
+        title: String,
+        startTime: String,
+        endTime: String,
+        notes: String = ""
+    ) {
+        manualBlocks.add(
+            ScheduleBlock(
+                title = title,
+                startTime = startTime,
+                endTime = endTime,
+                notes = notes
+            )
+        )
+    }
     private fun loadDate(date: LocalDate) {
         _uiState.value = _uiState.value.copy(
             selectedDate = date,

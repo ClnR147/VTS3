@@ -86,6 +86,7 @@ import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddres
 import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
+import com.example.vtsdaily3.feature_schedule.domain.ScheduleBlock
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
@@ -114,6 +115,14 @@ fun ScheduleScreen(
             DateTimeFormatter.ofPattern("EEE, MMM d, yyyy")
         )
     }
+    val testBlocks = listOf(
+        ScheduleBlock(
+            title = "REFUEL",
+            startTime = "14:15",
+            endTime = "14:30",
+            notes = ""
+        )
+    )
 
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
@@ -123,6 +132,13 @@ fun ScheduleScreen(
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
     var notes by remember { mutableStateOf<List<PassengerResidenceNote>>(emptyList()) }
+    var scheduleBlocks by remember {
+        mutableStateOf<List<ScheduleBlock>>(emptyList())
+    }
+    var showAddBlockDialog by remember {
+        mutableStateOf(false)
+    }
+
 
     LaunchedEffect(Unit) {
         notes = PassengerNotesStore.getAll(context)
@@ -179,6 +195,15 @@ fun ScheduleScreen(
             onDateClick = { showDatePickerDialog = true },
             onSelectViewMode = onSelectViewMode
         )
+
+        TextButton(
+            onClick = {
+                showAddBlockDialog = true
+            }
+        ) {
+            Text("Add Block")
+        }
+
         Spacer(modifier = Modifier.height(6.dp))
         when {
             uiState.isLoading -> {
@@ -296,6 +321,44 @@ fun ScheduleScreen(
         )
     }
 
+    if (showAddBlockDialog) {
+
+        AddScheduleBlockDialog(
+
+            onDismiss = {
+                showAddBlockDialog = false
+            },
+
+            onSave = { input ->
+
+                val parts = input.split(" ")
+
+                if (parts.size >= 2) {
+
+                    val title =
+                        parts.dropLast(1).joinToString(" ")
+
+                    val timePart = parts.last()
+
+                    val times = timePart.split("-")
+
+                    if (times.size == 2) {
+
+                        scheduleBlocks =
+                            scheduleBlocks + ScheduleBlock(
+                                title = title,
+                                startTime = times[0],
+                                endTime = times[1],
+                                notes = ""
+                            )
+                    }
+                }
+
+                showAddBlockDialog = false
+            }
+        )
+    }
+
     if (showInsertDialog) {
         InsertTripDialog(
             selectedDate = uiState.selectedDate,
@@ -309,6 +372,8 @@ fun ScheduleScreen(
         )
     }
 }
+
+
 
 @Composable
 private fun ActiveDatePickerDialog(
@@ -528,6 +593,7 @@ fun TripCard(
 
     val effectiveClinic = expectedClinicMatch ?: oppositeClinicMatch
     val isDirectionMismatch = expectedClinicMatch == null && oppositeClinicMatch != null
+    val displayAddresses = resolveTripDisplayAddresses(trip)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -663,8 +729,8 @@ fun TripCard(
             Spacer(Modifier.height(10.dp))
 
             ClickableAlignedLineV3(
-                label = "From:",
-                value = trip.fromAddress,
+                label = displayAddresses.fromLabel,
+                value = displayAddresses.fromValue,
                 expanded = expanded,
                 onClick = { launchWaze(context, trip.fromAddress) },
                 onLongClick = { showAddressChooser = true }
@@ -673,8 +739,8 @@ fun TripCard(
             if (toAddress.isNotBlank()) {
                 Spacer(Modifier.height(2.dp))
                 ClickableAlignedLineV3(
-                    label = "To:",
-                    value = toAddress,
+                    label = displayAddresses.toLabel,
+                    value = displayAddresses.toValue,
                     expanded = expanded,
                     onClick = { launchWaze(context, toAddress) },
                     onLongClick = { showAddressChooser = true }

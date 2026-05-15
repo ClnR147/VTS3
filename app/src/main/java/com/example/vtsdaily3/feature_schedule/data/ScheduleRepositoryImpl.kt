@@ -1,5 +1,6 @@
 package com.example.vtsdaily3.feature_schedule.data
 
+import android.util.Log
 import com.example.vtsdaily3.feature_schedule.domain.DailySchedule
 import com.example.vtsdaily3.model.TripId
 import com.example.vtsdaily3.model.TripStatus
@@ -31,14 +32,24 @@ class ScheduleRepositoryImpl(
             emptyList()
         }
 
+        rawTrips.forEach { trip ->
+            if (trip.name.contains("Marc Jensen", ignoreCase = true) ||
+                trip.name.contains("David Johnson", ignoreCase = true)
+            ) {
+                Log.d(
+                    "REPO_RAW",
+                    "name=${trip.name} | time=${trip.time} | from=${trip.fromAddress} | to=${trip.toAddress}"
+                )
+            }
+        }
         val statuses = statusStore.loadStatuses(date)
         val statusMap = statuses.associate { it.tripId to it.status }
 
-        val mergedTrips = rawTrips.map { trip ->
-            trip.copy(
-                status = statusMap[trip.id.value] ?: TripStatus.ACTIVE
-            )
-        }
+            val mergedTrips = rawTrips.map { trip ->
+                trip.copy(
+                    status = statusMap[trip.id.value] ?: TripStatus.ACTIVE
+                )
+            }
 
         val availableDates = getCachedAvailableDates()
 

@@ -22,6 +22,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -326,6 +327,19 @@ private fun LookupSummaryCard(
 private fun LookupDetailContent(
     detail: LookupPassengerDetail
 ) {
+    val context = LocalContext.current
+
+    fun dialPhone(phone: String?) {
+        val cleanedPhone = phone.orEmpty().trim()
+        if (cleanedPhone.isBlank()) return
+
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$cleanedPhone")
+        }
+
+        context.startActivity(intent)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -347,10 +361,18 @@ private fun LookupDetailContent(
                     title = detail.passenger,
                     showDivider = false
                 ) {
-                    VtsInfoRow(
-                        label = "Phone",
-                        value = detail.phone.orEmpty()
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !detail.phone.isNullOrBlank()) {
+                                dialPhone(detail.phone)
+                            }
+                    ) {
+                        VtsInfoRow(
+                            label = "Phone",
+                            value = detail.phone.orEmpty()
+                        )
+                    }
                 }
             }
         }

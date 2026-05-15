@@ -24,14 +24,19 @@ fun AddScheduleBlockDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Add Time Block")
+            Text(
+                "Add Block",
+                style = MaterialTheme.typography.titleMedium
+            )
         },
         text = {
             OutlinedTextField(
                 value = blockText,
                 onValueChange = { blockText = it },
                 singleLine = true,
-                label = { Text("REFUEL 14:15-14:30") }
+                placeholder = {
+                    Text("Lunch 14:15-14:30")
+                }
             )
         },
         confirmButton = {
@@ -49,6 +54,6 @@ fun AddScheduleBlockDialog(
             }
         },
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(16.dp)
     )
 }

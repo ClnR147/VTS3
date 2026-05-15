@@ -42,7 +42,8 @@ fun CardBackgroundComparisonPreview() {
                     onPreviousDate = {},
                     onNextDate = {},
                     onDateClick = {},
-                    onSelectViewMode = {}
+                    onSelectViewMode = {},
+                    onAddBlockClick = {}
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -71,7 +72,8 @@ fun CardBackgroundComparisonPreview() {
                     onPreviousDate = {},
                     onNextDate = {},
                     onDateClick = {},
-                    onSelectViewMode = {}
+                    onSelectViewMode = {},
+                    onAddBlockClick = {}
                 )
 
                 Spacer(Modifier.height(4.dp))

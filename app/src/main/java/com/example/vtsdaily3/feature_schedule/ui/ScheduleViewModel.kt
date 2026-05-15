@@ -188,6 +188,7 @@ class ScheduleViewModel(
     private var manualBlocks = mutableStateListOf<ScheduleBlock>()
 
     fun addScheduleBlock(
+        date: LocalDate,
         title: String,
         startTime: String,
         endTime: String,
@@ -195,6 +196,7 @@ class ScheduleViewModel(
     ) {
         manualBlocks.add(
             ScheduleBlock(
+                date = date,
                 title = title,
                 startTime = startTime,
                 endTime = endTime,

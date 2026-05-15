@@ -87,10 +87,10 @@ import com.example.vtsdaily3.feature_lookup.data.InsertTripPrefill
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
 import com.example.vtsdaily3.feature_schedule.domain.ScheduleBlock
+import com.example.vtsdaily3.feature_schedule.domain.ScheduleListItem
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
-import com.example.vtsdaily3.ui.components.directory.VtsThinDivider
-
+import java.time.temporal.TemporalQueries.localDate
 
 
 @Composable
@@ -115,14 +115,6 @@ fun ScheduleScreen(
             DateTimeFormatter.ofPattern("EEE, MMM d, yyyy")
         )
     }
-    val testBlocks = listOf(
-        ScheduleBlock(
-            title = "REFUEL",
-            startTime = "14:15",
-            endTime = "14:30",
-            notes = ""
-        )
-    )
 
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var notesTrip by remember { mutableStateOf<Trip?>(null) }
@@ -193,16 +185,11 @@ fun ScheduleScreen(
             onPreviousDate = onPreviousDate,
             onNextDate = onNextDate,
             onDateClick = { showDatePickerDialog = true },
-            onSelectViewMode = onSelectViewMode
-        )
-
-        TextButton(
-            onClick = {
+            onSelectViewMode = onSelectViewMode,
+            onAddBlockClick = {
                 showAddBlockDialog = true
-            }
-        ) {
-            Text("Add Block")
-        }
+            },
+        )
 
         Spacer(modifier = Modifier.height(6.dp))
         when {
@@ -223,64 +210,101 @@ fun ScheduleScreen(
             }
 
             else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(2.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                    items(
-                        items = uiState.tripsForSelectedView,
-                        key = { trip -> trip.id.toString() }
-                    ) { trip ->
 
-                        val normalizedTripName = normalizeNameForNotes(trip.name)
-
-                        val hasNote = notes.any {
-                            normalizeNameForNotes(it.displayPassengerName) == normalizedTripName
-                        }
-
-                        TripCard(
-                            trip = trip,
-                            hasNote = hasNote,
-                            selectedDate = uiState.selectedDate,
-                            clinics = clinics,
-                            viewMode = uiState.selectedViewMode,
-                            onTripActionSelected = { menuAction ->
-                                when (menuAction) {
-                                    TripMenuAction.COMPLETE -> {
-                                        onMarkTripStatus(trip.id, TripStatus.COMPLETED)
-                                    }
-                                    TripMenuAction.NOSHOW -> {
-                                        onMarkTripStatus(trip.id, TripStatus.NOSHOW)
-                                    }
-                                    TripMenuAction.CANCEL -> {
-                                        onMarkTripStatus(trip.id, TripStatus.CANCELLED)
-                                    }
-                                    TripMenuAction.REMOVE -> {
-                                        onMarkTripStatus(trip.id, TripStatus.REMOVED)
-                                    }
-                                    TripMenuAction.REINSTATE -> {
-                                        onReinstateTrip(trip.id)
-                                    }
+                val scheduleItems: List<ScheduleListItem> =
+                    uiState.tripsForSelectedView.map {
+                        ScheduleListItem.TripItem(it)
+                    } +
+                            scheduleBlocks
+                                .filter { it.date == uiState.selectedDate }
+                                .map {
+                                    ScheduleListItem.BlockItem(it)
                                 }
-                            },
-                            onLookupPassenger = onLookupPassenger,
-                            onPassengerNotes = { selectedTrip ->
-                                notesTrip = selectedTrip
-                            },
-                            onAddClinicRequested = { clinicAddress ->
-                                if (clinicAddress.isNotBlank()) {
-                                    pendingClinicAddress = clinicAddress
-                                    showAddClinicDialog = true
-                                }
-                            },
-                            onAddTripRequested = {
-                                showInsertDialog = true
+
+                val sortedScheduleItems: List<ScheduleListItem> =
+                    scheduleItems.sortedBy<ScheduleListItem, Int> { item ->
+                        when (item) {
+                            is ScheduleListItem.TripItem -> {
+                                parseTimeToSortKey(item.trip.time)
                             }
-                        )
 
-                     //*   Spacer(Modifier.height(1.dp)) *//
-                      //*  VtsThinDivider() *//
+                            is ScheduleListItem.BlockItem -> {
+                                parseTimeToSortKey(item.block.startTime)
+                            }
+                        }
+                    }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = sortedScheduleItems
+                    ) { item ->
+
+                        when (item) {
+
+                            is ScheduleListItem.TripItem -> {
+
+                                val trip = item.trip
+
+                                val normalizedTripName = normalizeNameForNotes(trip.name)
+
+                                val hasNote = notes.any {
+                                    normalizeNameForNotes(it.displayPassengerName) == normalizedTripName
+                                }
+
+                                TripCard(
+                                    trip = trip,
+                                    hasNote = hasNote,
+                                    selectedDate = uiState.selectedDate,
+                                    clinics = clinics,
+                                    viewMode = uiState.selectedViewMode,
+                                    onTripActionSelected = { menuAction ->
+                                        when (menuAction) {
+                                            TripMenuAction.COMPLETE -> {
+                                                onMarkTripStatus(trip.id, TripStatus.COMPLETED)
+                                            }
+
+                                            TripMenuAction.NOSHOW -> {
+                                                onMarkTripStatus(trip.id, TripStatus.NOSHOW)
+                                            }
+
+                                            TripMenuAction.CANCEL -> {
+                                                onMarkTripStatus(trip.id, TripStatus.CANCELLED)
+                                            }
+
+                                            TripMenuAction.REMOVE -> {
+                                                onMarkTripStatus(trip.id, TripStatus.REMOVED)
+                                            }
+
+                                            TripMenuAction.REINSTATE -> {
+                                                onReinstateTrip(trip.id)
+                                            }
+                                        }
+                                    },
+                                    onLookupPassenger = onLookupPassenger,
+                                    onPassengerNotes = { selectedTrip ->
+                                        notesTrip = selectedTrip
+                                    },
+                                    onAddClinicRequested = { clinicAddress ->
+                                        if (clinicAddress.isNotBlank()) {
+                                            pendingClinicAddress = clinicAddress
+                                            showAddClinicDialog = true
+                                        }
+                                    },
+                                    onAddTripRequested = {
+                                        showAddBlockDialog = true
+                                    }
+                                )
+                            }
+
+                            is ScheduleListItem.BlockItem -> {
+                                ScheduleBlockRow(
+                                    block = item.block
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -331,7 +355,9 @@ fun ScheduleScreen(
 
             onSave = { input ->
 
-                val parts = input.split(" ")
+                val parts = input
+                    .trim()
+                    .split(Regex("\\s+"))
 
                 if (parts.size >= 2) {
 
@@ -346,6 +372,7 @@ fun ScheduleScreen(
 
                         scheduleBlocks =
                             scheduleBlocks + ScheduleBlock(
+                                date = uiState.selectedDate,
                                 title = title,
                                 startTime = times[0],
                                 endTime = times[1],
@@ -1000,7 +1027,17 @@ fun TripCard(
     }
 }
 
+private fun parseTimeToSortKey(time: String): Int {
 
+    val regex = Regex("""(\d{1,2}):(\d{2})""")
+
+    val match = regex.find(time) ?: return Int.MAX_VALUE
+
+    val hour = match.groupValues[1].toIntOrNull() ?: 0
+    val minute = match.groupValues[2].toIntOrNull() ?: 0
+
+    return hour * 60 + minute
+}
 
 @Composable
 private fun EmptyScheduleState(
@@ -1040,7 +1077,8 @@ fun ScheduleHeaderCard(
     onNextDate: () -> Unit,
     onDateClick: () -> Unit,
     onSelectViewMode: (TripViewMode) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddBlockClick: () -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -1094,6 +1132,7 @@ fun ScheduleHeaderCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
                 ViewModeButton(
                     label = "Active",
                     selected = selectedViewMode == TripViewMode.ACTIVE,

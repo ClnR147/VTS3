@@ -265,7 +265,7 @@ fun ScheduleScreen(
                                             (
                                                     it.gateCode.isNotBlank() ||
                                                             it.noteText.isNotBlank() ||
-                                                            it.correctedPhone.isNotBlank()
+                                                            !it.correctedPhone.isNullOrBlank()
                                                     )
                                 }
 

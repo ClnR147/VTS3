@@ -29,7 +29,7 @@ import com.example.vtsdaily3.feature_clinics.data.ClinicEntry
 import com.example.vtsdaily3.feature_clinics.domain.NoteSide
 import com.example.vtsdaily3.feature_clinics.domain.resolveNoteSideForTrip
 import com.example.vtsdaily3.model.Trip
-import com.example.vtsdaily3.feature_schedule.notes.displayPassengerNameForNotes
+import com.example.vtsdaily3.ui.screens.PassengerNotesBrowserScreen
 
 
 @Composable
@@ -90,6 +90,20 @@ fun PassengerNotesScreen(
     }
     var correctedPhone by remember(passengerName, puAddress, doAddress) {
         mutableStateOf(initialRecord?.correctedPhone ?: "")
+    }
+
+    var showAllNotes by remember {
+        mutableStateOf(false)
+    }
+
+    if (showAllNotes) {
+        PassengerNotesBrowserScreen(
+            notes = PassengerNotesStore.getAll(context),
+            onClose = {
+                showAllNotes = false
+            }
+        )
+        return
     }
 
     LaunchedEffect(selectedSide, passengerName, puAddress, doAddress) {
@@ -218,6 +232,16 @@ fun PassengerNotesScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        Button(
+            onClick = {
+                showAllNotes = true
+            }
+        ) {
+            Text("Browse Notes")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -241,7 +265,7 @@ fun PassengerNotesScreen(
                             residenceSide = selectedSide,
                             gateCode = gateCode.trim(),
                             noteText = noteText.trim(),
-                            correctedPhone = correctedPhone.trim()
+                            correctedPhone = correctedPhone.trim().ifBlank { null }
                         )
 
                         PassengerNotesStore.put(context, note)

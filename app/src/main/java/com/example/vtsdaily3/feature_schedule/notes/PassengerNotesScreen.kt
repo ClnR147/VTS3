@@ -88,6 +88,9 @@ fun PassengerNotesScreen(
     var noteText by remember(passengerName, puAddress, doAddress) {
         mutableStateOf(initialRecord?.noteText ?: "")
     }
+    var correctedPhone by remember(passengerName, puAddress, doAddress) {
+        mutableStateOf(initialRecord?.correctedPhone ?: "")
+    }
 
     LaunchedEffect(selectedSide, passengerName, puAddress, doAddress) {
         val selectedKey = when (selectedSide) {
@@ -203,7 +206,17 @@ fun PassengerNotesScreen(
             maxLines = 8
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = correctedPhone,
+            onValueChange = { correctedPhone = it },
+            label = { Text("Correct Phone") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -226,8 +239,9 @@ fun PassengerNotesScreen(
                             residenceAddressKey = normalizeAddressForNotes(selectedAddress),
                             displayResidenceAddress = selectedAddress,
                             residenceSide = selectedSide,
-                            gateCode = gateCode,
-                            noteText = noteText
+                            gateCode = gateCode.trim(),
+                            noteText = noteText.trim(),
+                            correctedPhone = correctedPhone.trim()
                         )
 
                         PassengerNotesStore.put(context, note)

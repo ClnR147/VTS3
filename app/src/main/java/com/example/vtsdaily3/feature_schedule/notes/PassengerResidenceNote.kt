@@ -11,5 +11,6 @@ data class PassengerResidenceNote(
     val displayResidenceAddress: String,
     val residenceSide: ResidenceSide,
     val gateCode: String = "",
-    val noteText: String = ""
+    val noteText: String = "",
+    val correctedPhone: String = ""
 )

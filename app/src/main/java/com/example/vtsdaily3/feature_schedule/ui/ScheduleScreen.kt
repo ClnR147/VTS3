@@ -90,6 +90,7 @@ import com.example.vtsdaily3.feature_schedule.domain.ScheduleBlock
 import com.example.vtsdaily3.feature_schedule.domain.ScheduleListItem
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
+import com.example.vtsdaily3.feature_schedule.notes.normalizeAddressForNotes
 import java.time.temporal.TemporalQueries.localDate
 
 
@@ -250,8 +251,22 @@ fun ScheduleScreen(
 
                                 val normalizedTripName = normalizeNameForNotes(trip.name)
 
+                                val residenceAddress = when {
+                                    trip.time.startsWith("PR", ignoreCase = true) -> trip.fromAddress
+                                    trip.time.startsWith("PA", ignoreCase = true) -> trip.toAddress
+                                    else -> trip.fromAddress
+                                }
+
+                                val normalizedResidenceAddress = normalizeAddressForNotes(residenceAddress)
+
                                 val hasNote = notes.any {
-                                    normalizeNameForNotes(it.displayPassengerName) == normalizedTripName
+                                    it.passengerKey == normalizedTripName &&
+                                            it.residenceAddressKey == normalizedResidenceAddress &&
+                                            (
+                                                    it.gateCode.isNotBlank() ||
+                                                            it.noteText.isNotBlank() ||
+                                                            it.correctedPhone.isNotBlank()
+                                                    )
                                 }
 
                                 TripCard(

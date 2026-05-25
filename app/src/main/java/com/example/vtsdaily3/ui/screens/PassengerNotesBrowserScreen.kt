@@ -119,7 +119,9 @@ fun PassengerNoteDetailScreen(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Button(onClick = onBack) {
+        Button(
+            onClick = onBack
+        ) {
             Text("Back")
         }
 

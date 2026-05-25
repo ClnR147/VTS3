@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavHostController
 import com.example.vtsdaily3.data.ScheduleFolderPrefs
 import com.example.vtsdaily3.feature_lookup.data.LookupRow
 import com.example.vtsdaily3.feature_lookup.data.LookupStore
@@ -31,6 +32,7 @@ import com.example.vtsdaily3.feature_schedule.di.ScheduleModule
 
 @Composable
 fun ScheduleRoute(
+    onBrowseNotes: () -> Unit,
     onLookupPassenger: (String) -> Unit
 ) {
 
@@ -100,8 +102,6 @@ fun ScheduleRoute(
                 onLookupPassenger = onLookupPassenger,
                 onInsertTrip = viewModel::insertTrip,
                 onPrefillInsertedTrip = { name, tripType ->
-                    Log.d("PREFILL_DEBUG", "Route received name=[$name], type=[$tripType]")
-                    Log.d("PREFILL_DEBUG", "lookupHistoryRows size=${lookupHistoryRows.size}")
 
                     val result = findInsertTripPrefill(
                         rows = lookupHistoryRows,
@@ -109,10 +109,9 @@ fun ScheduleRoute(
                         tripType = tripType
                     )
 
-                    Log.d("PREFILL_DEBUG", "Route result=$result")
-
                     result
-                }
+                },
+                onBrowseNotes = onBrowseNotes
             )
         }
     }

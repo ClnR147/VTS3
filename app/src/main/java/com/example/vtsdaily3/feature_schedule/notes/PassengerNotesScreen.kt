@@ -92,20 +92,6 @@ fun PassengerNotesScreen(
         mutableStateOf(initialRecord?.correctedPhone ?: "")
     }
 
-    var showAllNotes by remember {
-        mutableStateOf(false)
-    }
-
-    if (showAllNotes) {
-        PassengerNotesBrowserScreen(
-            notes = PassengerNotesStore.getAll(context),
-            onClose = {
-                showAllNotes = false
-            }
-        )
-        return
-    }
-
     LaunchedEffect(selectedSide, passengerName, puAddress, doAddress) {
         val selectedKey = when (selectedSide) {
             ResidenceSide.PU -> puKey
@@ -229,16 +215,6 @@ fun PassengerNotesScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = {
-                showAllNotes = true
-            }
-        ) {
-            Text("Browse Notes")
-        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

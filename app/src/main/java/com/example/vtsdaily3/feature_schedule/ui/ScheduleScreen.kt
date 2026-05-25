@@ -80,6 +80,8 @@ import com.example.vtsdaily3.feature_clinics.data.ClinicStore
 import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
 import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import com.example.vtsdaily3.feature_clinics.domain.resolveClinicCandidateAddress
@@ -91,7 +93,9 @@ import com.example.vtsdaily3.feature_schedule.domain.ScheduleListItem
 import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.feature_schedule.notes.normalizeAddressForNotes
-import java.time.temporal.TemporalQueries.localDate
+import com.example.vtsdaily3.ui.screens.PassengerNotesBrowserScreen
+
+const val ROUTE_NOTES_BROWSER = "notes_browser"
 
 
 @Composable
@@ -107,7 +111,9 @@ fun ScheduleScreen(
     onNextDate: () -> Unit,
     onLookupPassenger: (String) -> Unit,
     onInsertTrip: (Trip) -> Unit,
-    onPrefillInsertedTrip: (name: String, tripType: String) -> InsertTripPrefill?
+    onPrefillInsertedTrip: (name: String, tripType: String) -> InsertTripPrefill?,
+    onBrowseNotes: () -> Unit
+
 ) {
     val context = LocalContext.current
 
@@ -128,9 +134,12 @@ fun ScheduleScreen(
     var scheduleBlocks by remember {
         mutableStateOf<List<ScheduleBlock>>(emptyList())
     }
+    var showToolsMenu by remember { mutableStateOf(false) }
+    var showNotesBrowser by remember { mutableStateOf(false) }
     var showAddBlockDialog by remember {
         mutableStateOf(false)
     }
+
 
 
     LaunchedEffect(Unit) {
@@ -142,6 +151,26 @@ fun ScheduleScreen(
         lookupRows = LookupStore.load(context)
     }
 
+    DropdownMenu(
+        expanded = showToolsMenu,
+        onDismissRequest = { showToolsMenu = false }
+    ) {
+        DropdownMenuItem(
+            text = { Text("Add Time Block") },
+            onClick = {
+                showToolsMenu = false
+                showAddBlockDialog = true
+            }
+        )
+
+        DropdownMenuItem(
+            text = { Text("Browse Notes") },
+            onClick = {
+                showToolsMenu = false
+                onBrowseNotes()
+            }
+        )
+    }
 
     notesTrip?.let { selectedTrip ->
         PassengerNotesScreen(
@@ -309,7 +338,7 @@ fun ScheduleScreen(
                                         }
                                     },
                                     onAddTripRequested = {
-                                        showAddBlockDialog = true
+                                        showToolsMenu = true
                                     }
                                 )
                             }
@@ -336,6 +365,14 @@ fun ScheduleScreen(
                 onSelectDate(selectedDate)
             }
         )
+    }
+
+    if (showNotesBrowser) {
+        PassengerNotesBrowserScreen(
+            notes = PassengerNotesStore.getAll(context),
+            onClose = { showNotesBrowser = false }
+        )
+        return
     }
 
     if (showAddClinicDialog) {

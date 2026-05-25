@@ -17,30 +17,51 @@ import com.example.vtsdaily3.feature_clinics.ui.ClinicsScreen
 import com.example.vtsdaily3.ui.navigation.AppDestination
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import com.example.vtsdaily3.feature_drivers.ui.DriversScreen
+import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
+import com.example.vtsdaily3.feature_schedule.ui.ROUTE_NOTES_BROWSER
+import com.example.vtsdaily3.ui.screens.PassengerNotesBrowserScreen
+
 
 
 @Composable
+
+
 fun AppNavHost(
     padding: PaddingValues,
     treeUri: Uri,
     navController: NavHostController
 ) {
-    var pendingLookupPassenger by rememberSaveable { mutableStateOf<String?>(null) }
+
+    var pendingLookupPassenger by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
         startDestination = AppDestination.Schedule.route,
         modifier = Modifier.padding(padding)
     ) {
+
         composable(AppDestination.Schedule.route) {
+
             ScheduleRoute(
+                onBrowseNotes = {
+                    // Disabled for now
+                },
                 onLookupPassenger = { passengerName ->
+
                     pendingLookupPassenger = passengerName
+
                     navController.navigate(AppDestination.Lookup.route) {
+
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
+
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -49,6 +70,7 @@ fun AppNavHost(
         }
 
         composable(AppDestination.Lookup.route) {
+
             LookupScreen(
                 initialPassengerName = pendingLookupPassenger,
                 onInitialPassengerNameConsumed = {
@@ -68,8 +90,8 @@ fun AppNavHost(
         composable(AppDestination.Clinics.route) {
             ClinicsScreen()
         }
-    }
 
+    }
 }
 
 @Composable

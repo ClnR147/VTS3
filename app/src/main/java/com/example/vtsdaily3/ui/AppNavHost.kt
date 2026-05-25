@@ -48,25 +48,38 @@ fun AppNavHost(
 
         composable(AppDestination.Schedule.route) {
 
-            ScheduleRoute(
-                onBrowseNotes = {
-                    // Disabled for now
-                },
-                onLookupPassenger = { passengerName ->
+            var showNotesBrowser by rememberSaveable {
+                mutableStateOf(false)
+            }
 
-                    pendingLookupPassenger = passengerName
-
-                    navController.navigate(AppDestination.Lookup.route) {
-
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-
-                        launchSingleTop = true
-                        restoreState = true
+            if (showNotesBrowser) {
+                PassengerNotesBrowserScreen(
+                    notes = PassengerNotesStore.getAll(context),
+                    onClose = {
+                        showNotesBrowser = false
                     }
-                }
-            )
+                )
+            } else {
+                ScheduleRoute(
+                    onBrowseNotes = {
+                        showNotesBrowser = true
+                    },
+                    onLookupPassenger = { passengerName ->
+
+                        pendingLookupPassenger = passengerName
+
+                        navController.navigate(AppDestination.Lookup.route) {
+
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
         }
 
         composable(AppDestination.Lookup.route) {

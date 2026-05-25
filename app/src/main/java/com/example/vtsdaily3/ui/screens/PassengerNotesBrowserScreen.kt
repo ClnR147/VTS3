@@ -50,6 +50,14 @@ fun PassengerNotesBrowserScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            Button(
+                onClick = onClose
+            ) {
+                Text("Back to Schedule")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {

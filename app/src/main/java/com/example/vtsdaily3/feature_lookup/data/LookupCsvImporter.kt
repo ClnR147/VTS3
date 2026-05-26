@@ -82,7 +82,7 @@ fun importLookupCsv(
             ).filter { it.second < 0 }
 
             if (missingAny.isNotEmpty()) {
-                Log.e(TAG_IMPORT, "Missing required/alias columns: $missingAny | Cleaned header=$clean")
+
                 return emptyList()
             }
 
@@ -179,5 +179,5 @@ private fun detectCsvSeparator(
 }
 
 private fun dumpHeaderForLogcat(header: List<String>) {
-    Log.d(TAG_IMPORT, "CSV header: ${header.joinToString(" | ")}")
+
 }

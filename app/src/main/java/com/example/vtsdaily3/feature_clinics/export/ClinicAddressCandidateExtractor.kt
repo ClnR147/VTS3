@@ -29,7 +29,6 @@ class ClinicAddressCandidateExtractor {
             results.add(candidate)
         }
 
-        android.util.Log.d("ClinicExport", "Final candidate count: ${results.size}")
         return results
     }
 

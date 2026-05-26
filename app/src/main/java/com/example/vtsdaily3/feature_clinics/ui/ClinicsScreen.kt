@@ -86,33 +86,6 @@ fun ClinicsScreen() {
 
             val rows = LookupStore.load(context)
 
-            val earlRows = rows.filter { it.passenger == "Earl Chenault" }
-
-            Log.d("ClinicAudit", "Earl rows count: ${earlRows.size}")
-
-            earlRows.forEachIndexed { index, row ->
-                val p = normalizeAddressForAudit(row.pAddress)
-                val d = normalizeAddressForAudit(row.dAddress)
-
-                Log.d(
-                    "ClinicAudit",
-                    """
-                EARL[$index]
-                date=${row.driveDate}
-                tripType=${row.tripType}
-                puTimeAppt=${row.puTimeAppt}
-                doTimeAppt=${row.doTimeAppt}
-                rtTime=${row.rtTime}
-                pRaw=${row.pAddress}
-                dRaw=${row.dAddress}
-                pNorm=[$p]
-                dNorm=[$d]
-                same=${p.isNotBlank() && d.isNotBlank() && p == d}
-                raw=${row.raw}
-                """.trimIndent()
-                )
-            }
-
             val knownClinicAddresses = clinics
                 .map { clinic ->
                     clinic.address
@@ -123,8 +96,6 @@ fun ClinicsScreen() {
                         .trim()
                 }
                 .toSet()
-
-            Log.d("ClinicExport", "Known clinic addresses: ${knownClinicAddresses.size}")
 
             val writer = ClinicAddressExportWriter(context.contentResolver)
 
@@ -157,7 +128,7 @@ fun ClinicsScreen() {
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null) {
-            Log.d("ClinicsImport", "Import cancelled")
+
             return@rememberLauncherForActivityResult
         }
 
@@ -173,9 +144,9 @@ fun ClinicsScreen() {
             val imported = parseClinicsCsv(context, uri)
             ClinicStore.save(context, imported)
             reloadClinics()
-            Log.d("ClinicsImport", "Imported ${imported.size} clinics")
+
         } catch (e: Exception) {
-            Log.e("ClinicsImport", "Import failed", e)
+
         }
     }
 
@@ -184,7 +155,7 @@ fun ClinicsScreen() {
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
         if (uri == null) {
-            Log.d("ClinicsExport", "Export cancelled")
+
             return@rememberLauncherForActivityResult
         }
 
@@ -205,9 +176,9 @@ fun ClinicsScreen() {
                 }
             }
 
-            Log.d("ClinicsExport", "Exported ${clinics.size} clinics")
+
         } catch (e: Exception) {
-            Log.e("ClinicsExport", "Export failed", e)
+
         }
     }
 

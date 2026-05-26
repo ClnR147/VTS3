@@ -67,7 +67,7 @@ fun LookupScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null) {
-            Log.d("LookupImport", "Import cancelled")
+
             return@rememberLauncherForActivityResult
         }
 
@@ -88,7 +88,7 @@ fun LookupScreen(
                 saveLookupUri(context, uri)
             }
         } catch (e: Exception) {
-            Log.e("LookupImport", "Import failed", e)
+
         }
     }
 
@@ -106,8 +106,7 @@ fun LookupScreen(
                 output.write(csv.toByteArray())
             }
 
-        } catch (e: Exception) {
-            Log.e("LOOKUP_AUDIT", "Failed to export CSV", e)
+        } catch (_: Exception) {
         }
     }
 

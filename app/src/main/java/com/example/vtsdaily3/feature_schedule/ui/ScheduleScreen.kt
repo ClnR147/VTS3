@@ -186,10 +186,6 @@ fun ScheduleScreen(
             trips = uiState.tripsForSelectedView,
             clinics = clinics
         )
-
-        warnings.forEach { warning ->
-            Log.d("ScheduleWarning", "${warning.tripId}: ${warning.message}")
-        }
     }
 
     Column(
@@ -290,7 +286,6 @@ fun ScheduleScreen(
 
                                 val hasNote = notes.any {
                                     it.passengerKey == normalizedTripName &&
-                                            it.residenceAddressKey == normalizedResidenceAddress &&
                                             (
                                                     it.gateCode.isNotBlank() ||
                                                             it.noteText.isNotBlank() ||
@@ -444,7 +439,7 @@ fun ScheduleScreen(
             onDismiss = { showInsertDialog = false },
             onPrefill = onPrefillInsertedTrip,
             onSave = { newTrip ->
-                Log.d("INSERT_DEBUG", "Calling onInsertTrip with: $newTrip")
+
                 onInsertTrip(newTrip)
                 showInsertDialog = false
             }
@@ -974,14 +969,6 @@ fun TripCard(
         }
 
         //* Spacer(Modifier.height(1.dp)) *//
-
-        if (isDirectionMismatch) {
-            Log.d(
-                "ClinicMatch",
-                "Direction mismatch: trip='${trip.name}', time='${trip.time}', " +
-                        "expectedSide='${expectedClinicAddress}', oppositeSideMatched='${oppositeClinicMatch.name}'"
-            )
-        }
 
         if (showAddressChooser) {
             AlertDialog(

@@ -52,7 +52,7 @@ fun ContactsScreen() {
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null) {
-            Log.d("ContactsImport", "Import cancelled")
+
             return@rememberLauncherForActivityResult
         }
 
@@ -68,9 +68,9 @@ fun ContactsScreen() {
             val imported = parseContactsCsv(context, uri)
             ContactStore.save(context, imported)
             reloadContacts()
-            Log.d("ContactsImport", "Imported ${imported.size} contacts")
+
         } catch (e: Exception) {
-            Log.e("ContactsImport", "Import failed", e)
+
         }
     }
 

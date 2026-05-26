@@ -108,12 +108,11 @@ fun InsertTripDialog(
 
                     Button(
                         onClick = {
-                            Log.d("PREFILL_DEBUG", "Prefill clicked")
-                            Log.d("PREFILL_DEBUG", "nameInput=[$nameInput], selectedType=[$selectedType]")
+
 
                             val prefill = onPrefill(nameInput.trim(), selectedType)
 
-                            Log.d("PREFILL_DEBUG", "prefill result=$prefill")
+
 
                             if (prefill != null) {
                                 phoneInput = prefill.phone

@@ -103,10 +103,7 @@ class ScheduleViewModel(
 
     fun markTripStatus(tripId: TripId, status: TripStatus) {
         viewModelScope.launch {
-            Log.d(
-                "TripStatusDebug",
-                "Saving status: date=${_uiState.value.selectedDate}, tripId=${tripId.value}, status=$status"
-            )
+
             try {
                 repository.setTripStatus(
                     date = _uiState.value.selectedDate,

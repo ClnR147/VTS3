@@ -45,7 +45,7 @@ fun ScheduleRoute(
 
     LaunchedEffect(Unit) {
         lookupHistoryRows = LookupStore.load(context)
-        Log.d("PREFILL_DEBUG", "Loaded lookup rows size=${lookupHistoryRows.size}")
+
     }
     val factory = remember(savedFolderUri) {
         ScheduleModule.createViewModelFactory(context)

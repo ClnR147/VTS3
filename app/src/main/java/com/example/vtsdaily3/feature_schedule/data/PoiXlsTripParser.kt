@@ -62,14 +62,7 @@ class PoiXlsTripParser(
                     nameRaw.contains("Marc Jensen", ignoreCase = true) ||
                     nameRaw.contains("David Johnson", ignoreCase = true)
                 ) {
-                    Log.d(
-                        "XLS_PARSE_ROW",
-                        "row=$r | name=$nameRaw | colA=${cellString(row.getCell(0)).trim()} | " +
-                                "colC=${cellString(row.getCell(2)).trim()} | " +
-                                "colD=${cellString(row.getCell(3)).trim()} | " +
-                                "colE=${cellString(row.getCell(4)).trim()} | " +
-                                "colF=${cellString(row.getCell(5)).trim()}"
-                    )
+
                 }
 
                 if (
@@ -79,7 +72,7 @@ class PoiXlsTripParser(
                     val values = (0..7).joinToString(" | ") { i ->
                         "[$i]=${cellString(row.getCell(i)).trim()}"
                     }
-                    Log.d("XLS_PARSE_WIDE", "row=$r | $values")
+
                 }
 
                 if (nameRaw.isBlank()) continue

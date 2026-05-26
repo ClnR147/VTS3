@@ -36,10 +36,7 @@ class ScheduleRepositoryImpl(
             if (trip.name.contains("Marc Jensen", ignoreCase = true) ||
                 trip.name.contains("David Johnson", ignoreCase = true)
             ) {
-                Log.d(
-                    "REPO_RAW",
-                    "name=${trip.name} | time=${trip.time} | from=${trip.fromAddress} | to=${trip.toAddress}"
-                )
+
             }
         }
         val statuses = statusStore.loadStatuses(date)

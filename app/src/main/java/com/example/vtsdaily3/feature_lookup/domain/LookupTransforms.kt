@@ -106,6 +106,9 @@ fun buildLookupPassengerDetail(
     if (matches.isEmpty()) return null
 
     val phone = matches
+        .sortedByDescending { row ->
+            parseLookupDriveDate(row.driveDate) ?: LocalDate.MIN
+        }
         .firstOrNull { !it.phone.isNullOrBlank() }
         ?.phone
         ?.trim()
@@ -134,4 +137,3 @@ fun buildLookupPassengerDetail(
         dayGroups = dayGroups
     )
 }
-

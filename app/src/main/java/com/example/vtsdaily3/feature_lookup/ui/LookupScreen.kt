@@ -133,7 +133,7 @@ private fun LookupScreenContent(
     onInitialPassengerNameConsumed: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedPassengerName by remember { mutableStateOf<String?>(null) }
+    var selectedPassengerId by remember { mutableStateOf<String?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(LookupSortMode.NAME) }
 
@@ -141,15 +141,25 @@ private fun LookupScreenContent(
         LazyListState(0, 0)
     }
 
-    LaunchedEffect(initialPassengerName) {
+    LaunchedEffect(initialPassengerName, uiState.summaries) {
         initialPassengerName
             ?.takeIf { it.isNotBlank() }
             ?.let { passengerName ->
 
-                val normalized = normalizePassengerNameForLookup(passengerName)
+                val normalized =
+                    normalizePassengerNameForLookup(passengerName)
 
                 searchQuery = normalized
-                selectedPassengerName = normalized
+
+                selectedPassengerId =
+                    uiState.summaries
+                        .firstOrNull { summary ->
+                            summary.passenger.equals(
+                                normalized,
+                                ignoreCase = true
+                            )
+                        }
+                        ?.passengerId
 
                 onInitialPassengerNameConsumed()
             }
@@ -182,38 +192,42 @@ private fun LookupScreenContent(
             }
     }
 
-    val selectedDetail = remember(uiState.rows, selectedPassengerName) {
-        selectedPassengerName?.let { passengerName ->
-            buildLookupPassengerDetail(uiState.rows, passengerName)
+    val selectedDetail =
+        remember(uiState.rows, selectedPassengerId) {
+            selectedPassengerId?.let { passengerId ->
+                buildLookupPassengerDetail(
+                    uiState.rows,
+                    passengerId
+                )
+            }
         }
-    }
 
     LaunchedEffect(queryText) {
-        if (selectedPassengerName == null) {
+        if (selectedPassengerId == null) {
             summaryListState.scrollToItem(0)
         }
     }
 
     LaunchedEffect(sortMode) {
-        if (selectedPassengerName == null) {
+        if (selectedPassengerId == null) {
             summaryListState.scrollToItem(0)
         }
     }
 
-    LaunchedEffect(selectedPassengerName) {
-        if (selectedPassengerName == null) {
+    LaunchedEffect(selectedPassengerId) {
+        if (selectedPassengerId == null) {
             summaryListState.scrollToItem(0)
         }
     }
 
     VtsDirectoryScreenShell(
         title = "Passenger Lookup",
-        showingDetail = selectedPassengerName != null,
-        onBackFromDetail = { selectedPassengerName = null },
+        showingDetail = selectedPassengerId != null,
+        onBackFromDetail = { selectedPassengerId = null },
         searchValue = searchQuery,
         onSearchValueChange = {
             searchQuery = it
-            selectedPassengerName = null
+            selectedPassengerId = null
         },
         searchPlaceholder = "Search passengers",
         sortOptions = listOf("Name", "Trips"),
@@ -282,11 +296,13 @@ private fun LookupScreenContent(
             ) {
                 items(
                     items = filteredSummaries,
-                    key = { it.passenger }
+                    key = { it.passengerId }
                 ) { summary ->
                     LookupSummaryCard(
                         summary = summary,
-                        onClick = { selectedPassengerName = summary.passenger }
+                        onClick = {
+                            selectedPassengerId = summary.passengerId
+                        }
                     )
                 }
             }

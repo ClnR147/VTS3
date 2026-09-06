@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class LookupSummary(
+    val passengerId: String,
     val passenger: String,
     val tripCount: Int
 )
@@ -48,14 +49,20 @@ private fun parseLookupDriveDate(raw: String?): LocalDate? {
 }
 fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
     return rows
-        .mapNotNull { row ->
-            row.passenger
-                ?.let(::normalizePassengerNameForLookup)
-                ?.takeIf { it.isNotBlank() }
-        }
-        .groupBy { it }
-        .map { (passenger, passengerRows) ->
+        .filter { !it.passengerId.isNullOrBlank() }
+        .groupBy { it.passengerId!!.trim() }
+        .map { (passengerId, passengerRows) ->
+            val passenger =
+                passengerRows
+                    .firstNotNullOfOrNull { row ->
+                        row.passenger
+                            ?.let(::normalizePassengerNameForLookup)
+                            ?.takeIf { it.isNotBlank() }
+                    }
+                    .orEmpty()
+
             LookupSummary(
+                passengerId = passengerId,
                 passenger = passenger,
                 tripCount = passengerRows.size
             )
@@ -69,38 +76,14 @@ private fun lookupDisplayName(raw: String): String {
         .takeWhile { it != '+' && it != '(' }
         .trim()
 }
-
-private fun parseDate(date: String?): Long {
-    return try {
-        val formatter = java.text.SimpleDateFormat("MM/dd/yyyy", java.util.Locale.US)
-        formatter.parse(date ?: "")?.time ?: Long.MIN_VALUE
-    } catch (e: Exception) {
-        Long.MIN_VALUE
-    }
-}
-
-private fun parseTime(row: LookupRow): Int {
-    val time = when (row.tripType) {
-        "appt" -> row.puTimeAppt
-        "return" -> row.rtTime
-        else -> row.puTimeAppt ?: row.rtTime
-    } ?: return -1
-
-    val match = Regex("""(\d{1,2}):(\d{2})""").find(time) ?: return -1
-    val hour = match.groupValues[1].toIntOrNull() ?: return -1
-    val minute = match.groupValues[2].toIntOrNull() ?: return -1
-
-    return hour * 60 + minute
-}
 fun buildLookupPassengerDetail(
     rows: List<LookupRow>,
-    passengerName: String
-): LookupPassengerDetail? {
-    val targetName = lookupDisplayName(passengerName)
-
+    passengerId: String
+): LookupPassengerDetail?
+{
     val matches = rows
         .filter { row ->
-            normalizePassengerNameForLookup(row.passenger.orEmpty()) == targetName
+            row.passengerId?.trim() == passengerId.trim()
         }
 
     if (matches.isEmpty()) return null
@@ -130,9 +113,17 @@ fun buildLookupPassengerDetail(
                 }
             )
         }
+    val passengerName =
+        matches
+            .firstNotNullOfOrNull { row ->
+                row.passenger
+                    ?.let(::normalizePassengerNameForLookup)
+                    ?.takeIf { it.isNotBlank() }
+            }
+            .orEmpty()
 
     return LookupPassengerDetail(
-        passenger = targetName,
+        passenger = passengerName,
         phone = phone,
         dayGroups = dayGroups
     )

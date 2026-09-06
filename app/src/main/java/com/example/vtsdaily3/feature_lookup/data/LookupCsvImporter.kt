@@ -48,6 +48,7 @@ fun importLookupCsv(
             data class Cols(
                 val driveDate: Int,
                 val passenger: Int,
+                val passengerId: Int,
                 val ar: Int,
                 val pAddr: Int,
                 val dAddr: Int,
@@ -60,6 +61,7 @@ fun importLookupCsv(
             val cols = Cols(
                 driveDate = findIdx("DriveDate", "Date", "Drive Date"),
                 passenger = findIdx("Passenger", "Name"),
+                passengerId = findIdx("PassengerID", "Passenger ID"),
                 ar = findIdx("A/R", "AR", "TripType", "Type"),
                 pAddr = findIdx("PAddress", "PickupAddress", "P Address"),
                 dAddr = findIdx("DAddress", "DropAddress", "D Address"),
@@ -72,6 +74,7 @@ fun importLookupCsv(
             val missingAny = listOf(
                 "DriveDate" to cols.driveDate,
                 "Passenger" to cols.passenger,
+                "PassengerID" to cols.passengerId,
                 "A/R" to cols.ar,
                 "PAddress" to cols.pAddr,
                 "DAddress" to cols.dAddr,
@@ -108,6 +111,7 @@ fun importLookupCsv(
                     val pAddr = at(row, cols.pAddr) ?: ""
                     val dAddr = at(row, cols.dAddr) ?: ""
                     val phone = at(row, cols.phone)
+                    val passengerId = at(row, cols.passengerId)
 
                     val ar = at(row, cols.ar)
                     val tripType = when (ar?.firstOrNull()?.uppercaseChar()) {
@@ -124,6 +128,7 @@ fun importLookupCsv(
                         LookupRow(
                             driveDate = driveDate,
                             passenger = passenger,
+                            passengerId = passengerId,
                             pAddress = pAddr,
                             dAddress = dAddr,
                             phone = phone,

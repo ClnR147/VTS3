@@ -58,7 +58,10 @@ fun CardBackgroundComparisonPreview() {
                     onLookupPassenger = {},
                     onPassengerNotes = {},
                     onAddClinicRequested = {},
-                    onAddTripRequested = {}
+                    onAddTripRequested = {},
+                    routeSelectionMode = false,
+                    routeSelected = false,
+                    onRouteSelectionChanged = {}
                 )
             }
 
@@ -88,7 +91,10 @@ fun CardBackgroundComparisonPreview() {
                     onLookupPassenger = {},
                     onPassengerNotes = {},
                     onAddClinicRequested = {},
-                    onAddTripRequested = {}
+                    onAddTripRequested = {},
+                    routeSelectionMode = false,
+                    routeSelected = false,
+                    onRouteSelectionChanged = {}
                 )
             }
         }

@@ -1,4 +1,13 @@
 import com.android.build.api.artifact.SingleArtifact
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    localPropertiesFile.inputStream().use { load(it) }
+}
+
+val mapsApiKey =
+    localProperties.getProperty("MAPS_API_KEY") ?: ""
 
 plugins {
     alias(libs.plugins.android.application)
@@ -20,7 +29,14 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner =
+            "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "MAPS_API_KEY",
+            "\"$mapsApiKey\""
+        )
     }
 
     buildTypes {
@@ -38,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

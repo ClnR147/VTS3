@@ -94,7 +94,6 @@ import com.example.vtsdaily3.feature_schedule.notes.PassengerNotesStore
 import com.example.vtsdaily3.feature_schedule.notes.PassengerResidenceNote
 import com.example.vtsdaily3.feature_schedule.notes.normalizeAddressForNotes
 import com.example.vtsdaily3.ui.screens.PassengerNotesBrowserScreen
-import androidx.compose.material3.Checkbox
 
 const val ROUTE_NOTES_BROWSER = "notes_browser"
 
@@ -132,6 +131,9 @@ fun ScheduleScreen(
     var showInsertDialog by remember { mutableStateOf(false) }
     var lookupRows by remember { mutableStateOf<List<LookupRow>>(emptyList()) }
     var notes by remember { mutableStateOf<List<PassengerResidenceNote>>(emptyList()) }
+    var scheduleBlocks by remember {
+        mutableStateOf<List<ScheduleBlock>>(emptyList())
+    }
     var routeSelectionMode by remember {
         mutableStateOf(false)
     }
@@ -139,14 +141,14 @@ fun ScheduleScreen(
     var routeSelectedTripIds by remember {
         mutableStateOf(setOf<TripId>())
     }
-    var scheduleBlocks by remember {
-        mutableStateOf<List<ScheduleBlock>>(emptyList())
+
+    var showRouteHelper by remember {
+        mutableStateOf(false)
     }
     var showToolsMenu by remember { mutableStateOf(false) }
     var showNotesBrowser by remember { mutableStateOf(false) }
     var showAddBlockDialog by remember {
         mutableStateOf(false)
-
     }
 
 
@@ -177,15 +179,6 @@ fun ScheduleScreen(
             onClick = {
                 showToolsMenu = false
                 onBrowseNotes()
-            }
-        )
-
-        DropdownMenuItem(
-            text = { Text("Route Helper") },
-            onClick = {
-                showToolsMenu = false
-                routeSelectedTripIds = emptySet()
-                routeSelectionMode = true
             }
         )
     }
@@ -277,41 +270,6 @@ fun ScheduleScreen(
                             }
                         }
                     }
-
-                if (routeSelectionMode) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "${routeSelectedTripIds.size} trips selected",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Row {
-                            TextButton(
-                                onClick = {
-                                    routeSelectedTripIds = emptySet()
-                                    routeSelectionMode = false
-                                }
-                            ) {
-                                Text("Cancel")
-                            }
-
-                            Button(
-                                enabled = routeSelectedTripIds.isNotEmpty(),
-                                onClick = {
-                                    // Route Helper screen comes next.
-                                }
-                            ) {
-                                Text("Route")
-                            }
-                        }
-                    }
-                }
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(2.dp),
@@ -396,7 +354,6 @@ fun ScheduleScreen(
                                                 routeSelectedTripIds - trip.id
                                             }
                                     },
-
                                     onAddTripRequested = {
                                         showToolsMenu = true
                                     }
@@ -758,14 +715,6 @@ fun TripCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (routeSelectionMode) {
-                    Checkbox(
-                        checked = routeSelected,
-                        onCheckedChange = onRouteSelectionChanged
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
                 Row(
                     modifier = Modifier
                         .weight(1f)

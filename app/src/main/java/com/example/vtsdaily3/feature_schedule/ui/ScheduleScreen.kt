@@ -80,6 +80,7 @@ import com.example.vtsdaily3.feature_clinics.data.ClinicStore
 import com.example.vtsdaily3.feature_clinics.domain.findMatchingClinic
 import com.example.vtsdaily3.feature_schedule.domain.buildScheduleWarnings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
@@ -179,6 +180,15 @@ fun ScheduleScreen(
             onClick = {
                 showToolsMenu = false
                 onBrowseNotes()
+            }
+        )
+
+        DropdownMenuItem(
+            text = { Text("Route Helper") },
+            onClick = {
+                showToolsMenu = false
+                routeSelectedTripIds = emptySet()
+                routeSelectionMode = true
             }
         )
     }
@@ -715,6 +725,16 @@ fun TripCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
+                if (routeSelectionMode) {
+                    Checkbox(
+                        checked = routeSelected,
+                        onCheckedChange = onRouteSelectionChanged
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+
                 Row(
                     modifier = Modifier
                         .weight(1f)

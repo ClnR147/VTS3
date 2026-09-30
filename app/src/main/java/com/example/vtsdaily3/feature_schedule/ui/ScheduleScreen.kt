@@ -414,9 +414,25 @@ fun ScheduleScreen(
                                     block = item.block
                                 )
                             }
+
                         }
                     }
                 }
+                    if (showRouteHelper) {
+
+                        val selectedTrips = sortedScheduleItems
+                            .filterIsInstance<ScheduleListItem.TripItem>()
+                            .map { it.trip }
+                            .filter { it.id in routeSelectedTripIds }
+
+                        RouteHelperDialog(
+                            trips = selectedTrips,
+                            onDismiss = {
+                                showRouteHelper = false
+                                routeSelectedTripIds = emptySet()
+                            }
+                        )
+                    }
             }
           }
         }

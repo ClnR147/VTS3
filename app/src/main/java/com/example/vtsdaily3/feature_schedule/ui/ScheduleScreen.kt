@@ -280,8 +280,47 @@ fun ScheduleScreen(
                             }
                         }
                     }
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+
+                if (routeSelectionMode) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${routeSelectedTripIds.size} trips selected",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Row {
+                            TextButton(
+                                onClick = {
+                                    routeSelectedTripIds = emptySet()
+                                    routeSelectionMode = false
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+
+                            Button(
+                                enabled = routeSelectedTripIds.isNotEmpty(),
+                                onClick = {
+                                    showRouteHelper = true
+                                    routeSelectionMode = false
+                                }
+                            ) {
+                                Text("Route")
+                            }
+                        }
+                    }
+                }
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(2.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -379,6 +418,7 @@ fun ScheduleScreen(
                     }
                 }
             }
+          }
         }
     }
 

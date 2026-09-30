@@ -32,6 +32,9 @@ import com.example.vtsdaily3.feature_schedule.domain.toRouteStops
 import com.example.vtsdaily3.model.Trip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.vtsdaily3.feature_schedule.domain.OptimizedRoute
+import com.example.vtsdaily3.feature_schedule.domain.RouteOptimizer
+import java.time.LocalTime
 
 @Composable
 fun RouteHelperDialog(
@@ -44,6 +47,9 @@ fun RouteHelperDialog(
 
     var matrix by remember {
         mutableStateOf<Array<IntArray>?>(null)
+    }
+    var optimizedRoute by remember {
+        mutableStateOf<OptimizedRoute?>(null)
     }
 
     var currentLocation by remember {
@@ -107,6 +113,15 @@ fun RouteHelperDialog(
             }
 
             matrix = result.travelSeconds
+
+            val now = LocalTime.now()
+            val startMinutes = now.hour * 60 + now.minute
+
+            optimizedRoute = RouteOptimizer.optimize(
+                stops = routeStops,
+                travelSeconds = result.travelSeconds,
+                startMinutes = startMinutes
+            )
 
         } catch (e: Exception) {
             errorMessage =
@@ -176,6 +191,52 @@ fun RouteHelperDialog(
                         )
                     }
                 }
+
+                item {
+                    val route = optimizedRoute
+
+                    if (route != null) {
+
+                        Text("Suggested route:")
+
+                        route.stops.forEachIndexed { index, stop ->
+
+                            val stopLabel = when (stop.stopType) {
+                                RouteStopType.PICKUP -> "PICKUP"
+                                RouteStopType.DROPOFF -> "DROPOFF"
+                            }
+
+                            val arrival = route.arrivalMinutes[index]
+
+                            val hour = arrival / 60
+                            val minute = arrival % 60
+
+                            Text(
+                                text = String.format(
+                                    Locale.US,
+                                    "%d. %02d:%02d  %s  %s",
+                                    index + 1,
+                                    hour,
+                                    minute,
+                                    stopLabel,
+                                    stop.passengerName
+                                ),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+
+                        Text(
+                            text = String.format(
+                                Locale.US,
+                                "Driving: %.1f min   PR penalty: %d min",
+                                route.totalDrivingSeconds / 60.0,
+                                route.outsideWindowMinutes
+                            ),
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+
 
                 item {
                     when {

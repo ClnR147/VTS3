@@ -75,9 +75,9 @@ object RouteOptimizer {
 
                 val driveSeconds =
                     if (order.isEmpty()) {
-                        0
+                        travelSeconds[0][nextIndex + 1]
                     } else {
-                        travelSeconds[order.last()][nextIndex]
+                        travelSeconds[order.last() + 1][nextIndex + 1]
                     }
 
                 val arrivalMinutes =

@@ -35,6 +35,11 @@ import kotlinx.coroutines.withContext
 import com.example.vtsdaily3.feature_schedule.domain.OptimizedRoute
 import com.example.vtsdaily3.feature_schedule.domain.RouteOptimizer
 import java.time.LocalTime
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.CancellationException
+
+
 
 @Composable
 fun RouteHelperDialog(
@@ -54,6 +59,9 @@ fun RouteHelperDialog(
 
     var currentLocation by remember {
         mutableStateOf<CurrentLocation?>(null)
+    }
+    var simulatedStartTime by rememberSaveable {
+        mutableStateOf("")
     }
 
     var locationPermissionGranted by remember {
@@ -97,7 +105,11 @@ fun RouteHelperDialog(
         }
     }
 
-    LaunchedEffect(routeStops, currentLocation) {
+    LaunchedEffect(
+        routeStops,
+        currentLocation,
+        simulatedStartTime
+    ) {
 
         val startLocation = currentLocation ?: return@LaunchedEffect
 
@@ -114,8 +126,19 @@ fun RouteHelperDialog(
 
             matrix = result.travelSeconds
 
-            val now = LocalTime.now()
-            val startMinutes = now.hour * 60 + now.minute
+            val startTime =
+                runCatching {
+                    if (simulatedStartTime.isBlank()) {
+                        LocalTime.now()
+                    } else {
+                        LocalTime.parse(simulatedStartTime.trim())
+                    }
+                }.getOrElse {
+                    LocalTime.now()
+                }
+
+            val startMinutes =
+                startTime.hour * 60 + startTime.minute
 
             optimizedRoute = RouteOptimizer.optimize(
                 stops = routeStops,
@@ -123,6 +146,8 @@ fun RouteHelperDialog(
                 startMinutes = startMinutes
             )
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             errorMessage =
                 "Routes API error: ${e.message ?: e}"
@@ -162,6 +187,17 @@ fun RouteHelperDialog(
                             Text("Waiting for location permission...")
                         }
                     }
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = simulatedStartTime,
+                        onValueChange = { simulatedStartTime = it },
+                        label = { Text("Test start time (HH:mm)") },
+                        placeholder = { Text("Example: 07:30") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 items(routeStops) { stop ->
@@ -228,7 +264,7 @@ fun RouteHelperDialog(
                         Text(
                             text = String.format(
                                 Locale.US,
-                                "Driving: %.1f min   PR penalty: %d min",
+                                "Driving: %.1f min   Timing penalty: %d min",
                                 route.totalDrivingSeconds / 60.0,
                                 route.outsideWindowMinutes
                             ),

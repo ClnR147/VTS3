@@ -31,6 +31,71 @@ object RouteOptimizer {
             }
         }
 
+        val paGroupEarliestPickupByTrip = mutableMapOf<Any, Int>()
+        val paGroupLatestPickupByTrip = mutableMapOf<Any, Int>()
+
+        val paPickupStops =
+            stops.filter {
+                it.stopType == RouteStopType.PICKUP &&
+                        it.typeTime.startsWith("PA", ignoreCase = true)
+            }
+
+        val paGroups =
+            paPickupStops.groupBy { pickup ->
+
+                val dropoffIndex =
+                    dropoffIndexByTrip[pickup.tripId]
+
+                val dropoff =
+                    dropoffIndex?.let { stops[it] }
+
+                val appointmentTime =
+                    parseSecondTime(pickup.typeTime)
+
+                if (dropoff != null && appointmentTime != null) {
+                    "${dropoff.address.trim().lowercase()}|$appointmentTime"
+                } else {
+                    pickup.tripId.toString()
+                }
+            }
+
+        paGroups.values
+            .filter { it.size > 1 }
+            .forEach { group ->
+
+                val pickupTimes =
+                    group.mapNotNull {
+                        parseFirstTime(it.typeTime)
+                    }
+
+                if (pickupTimes.isNotEmpty()) {
+
+                    val earliest = pickupTimes.min()
+                    val latest = pickupTimes.max()
+
+                    group.forEach { pickup ->
+                        paGroupEarliestPickupByTrip[pickup.tripId] =
+                            earliest
+
+                        paGroupLatestPickupByTrip[pickup.tripId] =
+                            latest
+                    }
+                }
+            }
+
+        val paGroupMembersByTrip = mutableMapOf<Any, Set<Any>>()
+
+        paGroups.values
+            .filter { it.size > 1 }
+            .forEach { group ->
+
+                val tripIds = group.map { it.tripId }.toSet()
+
+                group.forEach { pickup ->
+                    paGroupMembersByTrip[pickup.tripId] = tripIds
+                }
+            }
+
         var bestOrder: List<Int>? = null
         var bestArrivals: List<Int> = emptyList()
         var bestPenalty = Int.MAX_VALUE
@@ -105,8 +170,13 @@ object RouteOptimizer {
 
                         when {
                             stop.typeTime.startsWith("PA", ignoreCase = true) -> {
-                                if (arrivalMinutes < scheduled) {
-                                    arrivalMinutes = scheduled
+
+                                val earliestPickup =
+                                    paGroupEarliestPickupByTrip[stop.tripId]
+                                        ?: scheduled
+
+                                if (arrivalMinutes < earliestPickup) {
+                                    arrivalMinutes = earliestPickup
                                 }
                             }
 
@@ -122,6 +192,34 @@ object RouteOptimizer {
                 }
 
                 var newPenalty = penaltyMinutes
+
+// If this is a shared-destination PA group, prefer collecting
+// the whole group before going to their common destination.
+                if (
+                    stop.stopType == RouteStopType.DROPOFF &&
+                    stop.typeTime.startsWith("PA", ignoreCase = true)
+                ) {
+                    val groupMembers =
+                        paGroupMembersByTrip[stop.tripId]
+
+                    if (groupMembers != null) {
+
+                        val uncollectedGroupMembers =
+                            groupMembers.count { tripId ->
+
+                                val pickupIndex =
+                                    pickupIndexByTrip[tripId]
+
+                                pickupIndex != null &&
+                                        pickupIndex !in used
+                            }
+
+                        if (uncollectedGroupMembers > 0) {
+                            newPenalty +=
+                                uncollectedGroupMembers * 10
+                        }
+                    }
+                }
 
                 when {
 
@@ -151,11 +249,16 @@ object RouteOptimizer {
 
                         val pickupTime = parseFirstTime(stop.typeTime)
 
-                        if (
-                            pickupTime != null &&
-                            arrivalMinutes > pickupTime
-                        ) {
-                            newPenalty += arrivalMinutes - pickupTime
+                        if (pickupTime != null) {
+
+                            val latestPickup =
+                                paGroupLatestPickupByTrip[stop.tripId]
+                                    ?: pickupTime
+
+                            if (arrivalMinutes > latestPickup) {
+                                newPenalty +=
+                                    arrivalMinutes - latestPickup
+                            }
                         }
                     }
                     stop.typeTime.startsWith("PA", ignoreCase = true) &&

@@ -38,6 +38,8 @@ import java.time.LocalTime
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.CancellationException
+import java.time.ZonedDateTime
+import java.time.ZoneId
 
 
 
@@ -49,6 +51,17 @@ fun RouteHelperDialog(
     val context = LocalContext.current
 
     val routeStops = trips.flatMap { it.toRouteStops() }
+    val possibleCombinations =
+        trips
+            .groupBy {
+                it.toAddress
+                    .trim()
+                    .lowercase()
+            }
+            .values
+            .filter { group ->
+                group.size > 1
+            }
 
     var matrix by remember {
         mutableStateOf<Array<IntArray>?>(null)
@@ -110,21 +123,10 @@ fun RouteHelperDialog(
         currentLocation,
         simulatedStartTime
     ) {
-
         val startLocation = currentLocation ?: return@LaunchedEffect
 
         try {
             val addresses = routeStops.map { it.address }
-
-            val result = withContext(Dispatchers.IO) {
-                RoutesMatrixService()
-                    .getTravelMatrix(
-                        addresses = addresses,
-                        startLocation = startLocation
-                    )
-            }
-
-            matrix = result.travelSeconds
 
             val startTime =
                 runCatching {
@@ -136,6 +138,34 @@ fun RouteHelperDialog(
                 }.getOrElse {
                     LocalTime.now()
                 }
+
+            val now = ZonedDateTime.now()
+
+            var googleDepartureTime =
+                now.toLocalDate()
+                    .atTime(startTime)
+                    .atZone(ZoneId.systemDefault())
+
+            if (!googleDepartureTime.isAfter(now)) {
+                googleDepartureTime =
+                    googleDepartureTime.plusDays(1)
+            }
+
+            val departureTime =
+                googleDepartureTime.format(
+                    java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                )
+
+            val result = withContext(Dispatchers.IO) {
+                RoutesMatrixService()
+                    .getTravelMatrix(
+                        addresses = addresses,
+                        startLocation = startLocation,
+                        departureTime = departureTime
+                    )
+            }
+
+            matrix = result.travelSeconds
 
             val startMinutes =
                 startTime.hour * 60 + startTime.minute
@@ -228,6 +258,38 @@ fun RouteHelperDialog(
                     }
                 }
 
+                if (possibleCombinations.isNotEmpty()) {
+
+                    item {
+                        Text("Possible combinations:")
+                    }
+
+                    items(possibleCombinations) { group ->
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                group.joinToString(" + ") { trip ->
+                                    trip.name
+                                }
+                            )
+
+                            Text(
+                                text = "Same destination: ${group.first().toAddress}",
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+
+                            Text(
+                                text = "Pickup times: " +
+                                        group.joinToString(", ") { trip ->
+                                            trip.time
+                                        },
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
+                }
                 item {
                     val route = optimizedRoute
 
@@ -282,32 +344,6 @@ fun RouteHelperDialog(
 
                         matrix == null -> {
                             Text("Getting travel times...")
-                        }
-
-                        else -> {
-                            Text("Google travel matrix:")
-
-                            matrix!!.forEachIndexed {
-                                    origin, row ->
-
-                                val minutes =
-                                    row.joinToString("  ") { seconds ->
-                                        String.format(
-                                            Locale.US,
-                                            "%.1f",
-                                            seconds / 60.0
-                                        )
-                                    }
-
-                                Text(
-                                    text =
-                                        "$origin:  $minutes",
-                                    modifier =
-                                        Modifier.padding(
-                                            top = 2.dp
-                                        )
-                                )
-                            }
                         }
                     }
                 }

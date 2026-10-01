@@ -101,6 +101,7 @@ object RouteOptimizer {
         var bestPenalty = Int.MAX_VALUE
         var bestDrivingSeconds = Int.MAX_VALUE
         var bestPassengerRideMinutes = Int.MAX_VALUE
+        var bestCombinedCost = Int.MAX_VALUE
 
         fun search(
             order: List<Int>,
@@ -113,19 +114,26 @@ object RouteOptimizer {
             arrivals: List<Int>
         ) {
             if (order.size == stops.size) {
+                val drivingMinutes =
+                    (drivingSeconds / 60.0).toInt()
+
+                val combinedCost =
+                    drivingMinutes + passengerRideMinutes
+
                 if (
                     penaltyMinutes < bestPenalty ||
                     (
                             penaltyMinutes == bestPenalty &&
-                                    passengerRideMinutes < bestPassengerRideMinutes
+                                    combinedCost < bestCombinedCost
                             ) ||
                     (
                             penaltyMinutes == bestPenalty &&
-                                    passengerRideMinutes == bestPassengerRideMinutes &&
+                                    combinedCost == bestCombinedCost &&
                                     drivingSeconds < bestDrivingSeconds
                             )
                 ) {
                     bestPenalty = penaltyMinutes
+                    bestCombinedCost = combinedCost
                     bestPassengerRideMinutes = passengerRideMinutes
                     bestDrivingSeconds = drivingSeconds
                     bestOrder = order

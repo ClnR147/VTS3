@@ -15,7 +15,8 @@ class RoutesMatrixService {
 
     fun getTravelMatrix(
         addresses: List<String>,
-        startLocation: CurrentLocation? = null
+        startLocation: CurrentLocation? = null,
+        departureTime: String? = null
     ): MatrixResult {
 
         require(addresses.isNotEmpty())
@@ -90,6 +91,13 @@ class RoutesMatrixService {
             .put("destinations", destinations)
             .put("travelMode", "DRIVE")
             .put("routingPreference", "TRAFFIC_AWARE_OPTIMAL")
+
+        if (departureTime != null) {
+            requestBody.put(
+                "departureTime",
+                departureTime
+            )
+        }
 
         connection.outputStream.use { output ->
             output.write(

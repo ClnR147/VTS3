@@ -173,7 +173,10 @@ private fun LookupScreenContent(
         uiState.summaries
             .filter { summary ->
                 queryText.isBlank() ||
-                        summary.passenger.contains(queryText, ignoreCase = true)
+                        summary.passenger.contains(queryText, ignoreCase = true) ||
+                        summary.addresses.any { address ->
+                            address.contains(queryText, ignoreCase = true)
+                        }
             }
             .let { list ->
                 when (sortMode) {
@@ -229,7 +232,7 @@ private fun LookupScreenContent(
             searchQuery = it
             selectedPassengerId = null
         },
-        searchPlaceholder = "Search passengers",
+        searchPlaceholder = "Search name or address",
         sortOptions = listOf("Name", "Trips"),
         selectedSortOption = when (sortMode) {
             LookupSortMode.NAME -> "Name"

@@ -8,7 +8,8 @@ import java.time.format.DateTimeFormatter
 data class LookupSummary(
     val passengerId: String,
     val passenger: String,
-    val tripCount: Int
+    val tripCount: Int,
+    val addresses: List<String>
 )
 
 data class LookupTripDetail(
@@ -60,11 +61,23 @@ fun buildLookupSummaries(rows: List<LookupRow>): List<LookupSummary> {
                             ?.takeIf { it.isNotBlank() }
                     }
                     .orEmpty()
+            val addresses =
+                passengerRows
+                    .flatMap { row ->
+                        listOfNotNull(
+                            row.pAddress,
+                            row.dAddress
+                        )
+                    }
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
 
             LookupSummary(
                 passengerId = passengerId,
                 passenger = passenger,
-                tripCount = passengerRows.size
+                tripCount = passengerRows.size,
+                addresses = addresses
             )
         }
         .sortedBy { it.passenger }
